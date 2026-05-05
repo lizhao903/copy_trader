@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Settings</title>
+<!-- spec: openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#29 (Dashboard 设置中心) -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <h1>Settings 设置中心</h1>
+  <p class="subtitle">所有配置统一入口。写 <span class="badge layer">local</span> 字段直接落 <code>$COPY_TRADER_HOME/config.yaml</code> 立即生效；写 <span class="badge layer">env</span>/<span class="badge layer">base</span> 字段触发 git workdir 改动 + draft PR；敏感字段不暴露原值。</p>
+
+  <h2>Layer 状态摘要</h2>
+  <div class="cards">
+    <div class="card">
+      <span class="label">base.yaml</span>
+      <div class="value">42 <span class="muted small">字段</span></div>
+      <div class="delta">结构性：账户名单、symbol 白名单、策略 module</div>
+    </div>
+    <div class="card">
+      <span class="label">env: dev.yaml</span>
+      <div class="value">3 <span class="muted small">覆盖</span></div>
+      <div class="delta">log_level=debug · paper_default=true · notify.enabled=false</div>
+    </div>
+    <div class="card">
+      <span class="label">local: $HOME/config.yaml</span>
+      <div class="value">5 <span class="muted small">覆盖</span></div>
+      <div class="delta">capital / pyramid 阈值微调</div>
+    </div>
+    <div class="card">
+      <span class="label">env vars (COPY_TRADER_*)</span>
+      <div class="value">2 <span class="muted small">覆盖</span></div>
+      <div class="delta">COPY_TRADER_LOG_LEVEL · 其余敏感凭证</div>
+    </div>
+  </div>
+
+  <h2>七段配置</h2>
+  <div class="cards">
+    <div class="card">
+      <a href="settings-accounts.html" class="title">账户维护 · accounts</a>
+      <span class="muted small">venue / enabled / credentials_alias / symbols 多选</span>
+      <div class="mt-12"><span class="badge layer">base</span> <span class="badge layer">env</span></div>
+    </div>
+    <div class="card">
+      <a href="settings-capital.html" class="title">资金分配 · capital_allocation</a>
+      <span class="muted small">(account, strategy) → max_quote / reserve_quote</span>
+      <div class="mt-12"><span class="badge layer">base</span> <span class="badge layer">env</span> <span class="badge layer">local</span></div>
+    </div>
+    <div class="card">
+      <a href="settings-pyramid.html" class="title">滚仓 · pyramid</a>
+      <span class="muted small">first_entry_fraction / add_trigger_pct / max_rounds</span>
+      <div class="mt-12"><span class="badge layer">base</span> <span class="badge layer">env</span> <span class="badge layer">local</span></div>
+    </div>
+    <div class="card">
+      <a href="settings-fixed-position.html" class="title">固定仓位 · fixed_position</a>
+      <span class="muted small">mode (qty/quote) · 与 pyramid 互斥</span>
+      <div class="mt-12"><span class="badge layer">base</span> <span class="badge layer">env</span> <span class="badge layer">local</span></div>
+    </div>
+    <div class="card">
+      <a href="settings-strategies.html" class="title">策略库 · strategies</a>
+      <span class="muted small">name / module / 默认参数</span>
+      <div class="mt-12"><span class="badge layer">base</span></div>
+    </div>
+    <div class="card">
+      <a href="settings-notify.html" class="title">IM 网关 · notify</a>
+      <span class="muted small">Slack / Telegram / Feishu / Dingtalk adapter</span>
+      <div class="mt-12"><span class="badge layer">base</span> <span class="badge layer">env</span></div>
+    </div>
+    <div class="card">
+      <a href="settings-risk.html" class="title">风控 · risk</a>
+      <span class="muted small">日亏熔断 / 总敞口上限 / 连亏熔断</span>
+      <div class="mt-12"><span class="badge layer">base</span> <span class="badge layer">env</span> <span class="badge layer">local</span></div>
+    </div>
+  </div>
+
+  <div class="alert info mt-24">
+    <strong>写入分流</strong>：<span class="badge layer">local</span> 字段保存即生效；<span class="badge layer">env</span>/<span class="badge layer">base</span> 字段只改 git workdir，需点页面底部的 <em>"创建 draft PR"</em> 才进 review。所有写入追加到 <a href="audit.html">audit.log</a>。
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

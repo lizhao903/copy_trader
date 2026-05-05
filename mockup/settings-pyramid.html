@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Pyramid</title>
+<!-- spec: openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="settings-index.html">← Settings</a>
+  </div>
+  <div class="row between mb-12">
+    <div>
+      <h1>滚仓 · pyramid</h1>
+      <p class="subtitle">颗粒 (account, strategy)。与 <a href="settings-fixed-position.html">fixed_position</a> <strong>互斥</strong>：同 (account, strategy) 不能同时启用。阈值字段通常落 <span class="badge layer">local</span>。</p>
+    </div>
+    <button class="btn primary" data-action="add_pyramid">+ 新增滚仓配置</button>
+  </div>
+
+  <div class="alert info">
+    <strong>滚仓机制</strong>：首仓占 <code>max_quote_amount × first_entry_fraction</code>；浮盈 ≥ <code>add_trigger_pct%</code> 触发加仓，最多 <code>max_rounds</code> 轮；预留 <code>reserve_quote_usdt</code> 用于救援平均成本。
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>account</th><th>strategy</th><th>enabled</th>
+        <th class="right">first_entry_fraction</th>
+        <th class="right">add_trigger_pct</th>
+        <th class="right">reserve (USDT)</th>
+        <th class="right">max_rounds</th>
+        <th>当前轮</th><th class="right">actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>spot</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td><input type="checkbox" class="toggle" checked></td>
+        <td class="right"><input type="number" step="0.05" value="0.50" style="width:80px;text-align:right"></td>
+        <td class="right"><input type="number" step="0.1" value="1.5" style="width:80px;text-align:right"></td>
+        <td class="right"><input type="number" step="10" value="100" style="width:90px;text-align:right"></td>
+        <td class="right"><input type="number" step="1" value="2" style="width:60px;text-align:right"></td>
+        <td><span class="badge layer">round 1/2</span></td>
+        <td class="right nowrap"><button class="btn small danger" data-action="delete">Del</button></td>
+      </tr>
+      <tr>
+        <td>alt</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td><input type="checkbox" class="toggle" checked></td>
+        <td class="right"><input type="number" step="0.05" value="0.40" style="width:80px;text-align:right"></td>
+        <td class="right"><input type="number" step="0.1" value="2.0" style="width:80px;text-align:right"></td>
+        <td class="right"><input type="number" step="10" value="160" style="width:90px;text-align:right"></td>
+        <td class="right"><input type="number" step="1" value="3" style="width:60px;text-align:right"></td>
+        <td><span class="badge layer">round 0/3</span></td>
+        <td class="right nowrap"><button class="btn small danger" data-action="delete">Del</button></td>
+      </tr>
+      <tr>
+        <td>hl_eth</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td><input type="checkbox" class="toggle"></td>
+        <td class="right"><input type="number" step="0.05" value="1.00" style="width:80px;text-align:right" disabled></td>
+        <td class="right"><input type="number" step="0.1" value="0.0" style="width:80px;text-align:right" disabled></td>
+        <td class="right"><input type="number" step="10" value="0" style="width:90px;text-align:right" disabled></td>
+        <td class="right"><input type="number" step="1" value="1" style="width:60px;text-align:right" disabled></td>
+        <td class="muted small">禁用</td>
+        <td class="right nowrap"><button class="btn small danger" data-action="delete">Del</button></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert warning mt-12">
+    <strong>hl_eth · kdj_short_1h3m</strong> 滚仓已禁用。该 (account, strategy) 在 <a href="settings-fixed-position.html">固定仓位</a> 中启用了 <code>fixed_qty=0.15 ETH-USD</code>，二者不能同时生效（spec 互斥校验）。
+  </div>
+
+  <h2>滚仓状态</h2>
+  <p class="small muted">运行中实例的当前轮数从 <a href="runners-detail.html">runner detail</a> 的 <code>pyramid_stage</code> 字段读取，实时反映 <code>state/position_&lt;runner_id&gt;.json</code> 缓存（reconcile 时与 ledger 对齐）。</p>
+
+  <hr>
+  <div class="row between">
+    <span class="muted small">未保存改动：阈值 0 个 · enable toggle 0 个</span>
+    <div class="row gap-12">
+      <button class="btn">放弃改动</button>
+      <button class="btn primary">保存（立即生效）</button>
+    </div>
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

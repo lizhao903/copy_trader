@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Notify</title>
+<!-- spec: openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="settings-index.html">← Settings</a>
+  </div>
+  <h1>IM 网关 · notify</h1>
+  <p class="subtitle">非凭证字段（enabled / channel / 模板）属 <span class="badge layer">base</span>/<span class="badge layer">env</span>；webhook URL 与 token 为敏感字段，仅经 env vars 注入。</p>
+
+  <h2>事件路由总开关</h2>
+  <div class="cards mb-24">
+    <div class="card">
+      <span class="label">事件: critical_alert</span>
+      <div class="row gap-12 mt-12"><input type="checkbox" class="toggle" checked> Slack + Telegram</div>
+    </div>
+    <div class="card">
+      <span class="label">事件: trade_fill</span>
+      <div class="row gap-12 mt-12"><input type="checkbox" class="toggle" checked> Slack</div>
+    </div>
+    <div class="card">
+      <span class="label">事件: reconcile_drift</span>
+      <div class="row gap-12 mt-12"><input type="checkbox" class="toggle" checked> Slack + Telegram</div>
+    </div>
+    <div class="card">
+      <span class="label">事件: hourly_pnl</span>
+      <div class="row gap-12 mt-12"><input type="checkbox" class="toggle"> 全部</div>
+    </div>
+  </div>
+
+  <h2>Slack</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle" checked></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">webhook_url</label>
+      <div class="control-col">
+        <code>&lt;set&gt;</code>
+        <span class="muted small">最后修改：2026-04-12 09:35 UTC · 通过 <code>SLACK_WEBHOOK_URL</code> env var 注入</span>
+        <div class="hint">敏感字段。Dashboard 不展示原值；编辑请去 <code>$COPY_TRADER_HOME/secrets/.env</code>。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">channel</label>
+      <div class="control-col"><input type="text" value="#copy-trader-prod"></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">action</label>
+      <div class="control-col"><button class="btn small" data-action="test_send" data-target="slack">测试发送</button></div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">Telegram</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle" checked></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">bot_token</label>
+      <div class="control-col">
+        <code>&lt;set&gt;</code>
+        <span class="muted small">通过 <code>TELEGRAM_BOT_TOKEN</code> env var 注入</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">chat_id</label>
+      <div class="control-col"><input type="text" value="-1001234567890"></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">action</label>
+      <div class="control-col"><button class="btn small" data-action="test_send" data-target="telegram">测试发送</button></div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">Feishu</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle"></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">webhook_url</label>
+      <div class="control-col">
+        <code>&lt;not set&gt;</code>
+        <span class="muted small">未配置 <code>FEISHU_WEBHOOK_URL</code></span>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">action</label>
+      <div class="control-col"><button class="btn small" data-action="test_send" data-target="feishu" disabled>测试发送（未启用）</button></div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">Dingtalk</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle"></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">webhook_url</label>
+      <div class="control-col">
+        <code>&lt;not set&gt;</code>
+        <span class="muted small">未配置 <code>DINGTALK_WEBHOOK_URL</code></span>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">action</label>
+      <div class="control-col"><button class="btn small" data-action="test_send" data-target="dingtalk" disabled>测试发送（未启用）</button></div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">告警疲劳管理（占位）</h2>
+  <p class="small muted">M4+ 接入：去重窗口、严重等级映射、节流策略。当前仅展示骨架。</p>
+
+  <hr>
+  <div class="row between">
+    <span class="muted small">未保存改动：0 项</span>
+    <div class="row gap-12">
+      <button class="btn">放弃改动</button>
+      <button class="btn primary">保存（立即生效）</button>
+    </div>
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

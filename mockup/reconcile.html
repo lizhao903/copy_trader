@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Reconcile</title>
+<!-- spec: openspec/specs/pnl-single-source/spec.md (Startup reconcile compares ledger, exchange, and cache) -->
+<!-- issue: lizhao903/copy_trader#11 (ReconcileService) #28 (Dashboard 视图) -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html" class="active">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row between mb-12">
+    <div>
+      <h1>Reconcile</h1>
+      <p class="subtitle">三方比对：ledger（账本，权威） · 交易所余额（真实仓位） · cache（<code>state/position_*.json</code>，可重建）。来源 <code>logs/reconcile_&lt;ts&gt;.log</code>。</p>
+    </div>
+    <div class="row">
+      <button class="btn primary" data-action="run_now">立即跑一次 reconcile</button>
+      <select style="width:160px"><option>所有 account</option><option>spot</option><option>alt</option><option>copy</option><option>hl_eth</option></select>
+    </div>
+  </div>
+
+  <h2>差异分级</h2>
+  <div class="cards">
+    <div class="card">
+      <span class="label">cache_drift</span>
+      <div class="value" style="color:var(--warning)">1</div>
+      <div class="delta muted">仅 cache 与 ledger 不一致 → 自动修正，不告警</div>
+    </div>
+    <div class="card">
+      <span class="label">ledger_exchange_mismatch</span>
+      <div class="value" style="color:var(--accent)">0</div>
+      <div class="delta muted">ledger 与交易所余额差异 &gt; 容差 → SAFE 模式 + critical alert</div>
+    </div>
+    <div class="card">
+      <span class="label">unknown_position_on_exchange</span>
+      <div class="value" style="color:var(--error)">0</div>
+      <div class="delta muted">交易所有 ledger 中没有的仓位 → 拒绝启动，要人工介入</div>
+    </div>
+  </div>
+
+  <h2>近期 Reconcile 报告（按账户）</h2>
+  <table>
+    <thead>
+      <tr><th>ts (UTC)</th><th>account</th><th>runner</th><th>diff 类型</th><th>详情</th><th>处置</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono small">14:32:11</td>
+        <td>spot</td>
+        <td><a href="runners-detail.html">spot-kdj</a></td>
+        <td><span class="badge warning">cache_drift</span></td>
+        <td class="mono small">peak_price: cache=180.50 → ledger 重建=182.40</td>
+        <td><span class="badge healthy">auto-corrected</span> cache_overridden 事件已记录</td>
+      </tr>
+      <tr>
+        <td class="mono small">14:30:00</td>
+        <td>alt</td>
+        <td><a href="runners-detail.html">alt-kdj</a></td>
+        <td><span class="badge healthy">aligned</span></td>
+        <td class="mono small">ETH 0.4200 ledger=exchange=cache</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="mono small">14:30:00</td>
+        <td>copy</td>
+        <td><a href="runners-detail.html">copy-hello</a></td>
+        <td><span class="badge healthy">aligned</span></td>
+        <td class="mono small">空仓位（runner stopped）</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="mono small">14:30:00</td>
+        <td>hl_eth</td>
+        <td><a href="runners-detail.html">hl-eth-kdj</a></td>
+        <td><span class="badge healthy">aligned</span></td>
+        <td class="mono small">ETH-USD 0.1500 ledger=exchange=cache</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-04 18:24:33</td>
+        <td>alt</td>
+        <td><a href="runners-detail.html">alt-kdj</a></td>
+        <td><span class="badge errored">ledger_exchange_mismatch</span></td>
+        <td class="mono small">ledger ETH=0.42 vs exchange ETH=0.40 (差 0.02 &gt; tolerance)</td>
+        <td><span class="badge errored">SAFE 模式</span> · 已发 critical alert</td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-04-22 11:34:20</td>
+        <td>copy</td>
+        <td>—</td>
+        <td><span class="badge errored">unknown_position</span></td>
+        <td class="mono small">交易所有 BTC 0.05，ledger 无记录</td>
+        <td><span class="badge errored">refused start</span> · 人工 ack 后清理</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>当前活跃异常详情</h2>
+  <div class="alert warning">
+    <strong>spot · spot-kdj · cache_drift</strong>（已自动修正 14:32:11）<br>
+    <span class="mono small">差异字段：peak_price / 来源：ledger 重建得 182.40，cache 旧值 180.50 / 处置：覆盖 cache，记录 cache_overridden 事件</span>
+  </div>
+
+  <h2>原始日志预览</h2>
+  <pre class="log">2026-05-05 14:32:11 [INFO]  reconcile.spot.spot-kdj start
+2026-05-05 14:32:11 [INFO]  fetch exchange balance: SOL 5.234 / USDT 1245.30
+2026-05-05 14:32:11 [INFO]  fetch fills since last reconcile: 1 new (bn_4582193)
+2026-05-05 14:32:11 [INFO]  rebuild position from ledger: SOL qty=5.234 entry=175.10 peak=182.40
+2026-05-05 14:32:11 [INFO]  compare cache:       SOL qty=5.234 entry=175.10 peak=180.50
+2026-05-05 14:32:11 [WARN]  cache_drift: peak_price 180.50 != ledger 182.40
+2026-05-05 14:32:11 [INFO]  apply rebuild: cache_overridden / runner notified
+2026-05-05 14:32:11 [INFO]  reconcile.spot.spot-kdj done (1 drift, auto-corrected)
+2026-05-05 14:30:00 [INFO]  reconcile.alt.alt-kdj   start … aligned (no drift)
+2026-05-05 14:30:00 [INFO]  reconcile.copy.copy-hello start … aligned (empty position)
+2026-05-05 14:30:00 [INFO]  reconcile.hl_eth.hl-eth-kdj start … aligned</pre>
+
+  <p class="small muted mt-12">完整日志：<code>$COPY_TRADER_HOME/logs/reconcile_&lt;ts&gt;.log</code> · 保留期 30 天</p>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

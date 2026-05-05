@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Doctor</title>
+<!-- spec: openspec/specs/runtime-isolation/spec.md, openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#5 (CLI doctor) #28 (Dashboard 可视化) -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html" class="active">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row between mb-12">
+    <div>
+      <h1>Doctor <span class="badge healthy">healthy</span></h1>
+      <p class="subtitle">系统自检。CLI 等价：<code>copy-trader doctor</code> · 详细 schema 映射：<code>copy-trader doctor --schema</code></p>
+    </div>
+    <button class="btn" data-action="rerun">重新检查</button>
+  </div>
+
+  <h2>运行时根目录</h2>
+  <dl class="kv">
+    <dt>COPY_TRADER_ENV</dt><dd>dev <span class="layer-tag">[envvar]</span></dd>
+    <dt>COPY_TRADER_HOME</dt><dd>/Users/li/work/copy_trader/var/dev <span class="layer-tag">[default]</span></dd>
+    <dt>state/</dt><dd>0700 ✓ writable</dd>
+    <dt>logs/</dt><dd>0700 ✓ writable · 占用 12.4 MB</dd>
+    <dt>pids/</dt><dd>0700 ✓ writable · 2 个活跃 PID</dd>
+    <dt>db/</dt><dd>0700 ✓ writable · trades.db 4.2 MB / klines.db 587 MB</dd>
+    <dt>secrets/</dt><dd>0700 ✓ writable · .env 已加载（5 个 key）</dd>
+  </dl>
+
+  <h2>锁与机器身份</h2>
+  <dl class="kv">
+    <dt>state/.machine_id</dt><dd>b3f2-4a1d-49e8-9c6b-a7f8e2d17c9d</dd>
+    <dt>state/.runtime_lock.json</dt><dd>
+      <span class="mono">{ "env_tag": "dev", "machine_id": "b3f2…7c9d", "schema_version": 2,</span><br>
+      <span class="mono">  "pid": 48213, "started_at": "2026-05-05T09:00:12Z" }</span>
+    </dd>
+    <dt>跨环境校验</dt><dd><span class="badge healthy">pass</span> 当前进程 (env_tag, machine_id) 与锁一致</dd>
+  </dl>
+
+  <h2>Ledger</h2>
+  <dl class="kv">
+    <dt>db/trades.db</dt><dd>schema_version 2 · 1,823 fills · 96 today</dd>
+    <dt>跨环境写入校验</dt><dd><span class="badge healthy">enforced</span> 拒绝 (env_tag, machine_id) 不一致写入</dd>
+    <dt>legacy 行</dt><dd>0 条（本仓 ledger 自 schema_version=2 起，无 legacy）</dd>
+  </dl>
+
+  <h2>配置来源（每字段标注 layer）</h2>
+  <table>
+    <thead><tr><th>字段路径</th><th>当前值</th><th>来源层</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">log_level</td><td class="mono">debug</td><td><span class="badge layer">env</span> dev.yaml</td></tr>
+      <tr><td class="mono">paper_default</td><td class="mono">true</td><td><span class="badge layer">env</span> dev.yaml</td></tr>
+      <tr><td class="mono">notify.slack.enabled</td><td class="mono">false</td><td><span class="badge layer">env</span> dev.yaml</td></tr>
+      <tr><td class="mono">accounts.spot.symbols</td><td class="mono">[SOLUSDT]</td><td><span class="badge layer">base</span> base.yaml</td></tr>
+      <tr><td class="mono">accounts.spot.venue</td><td class="mono">binance.spot</td><td><span class="badge layer">base</span> base.yaml</td></tr>
+      <tr><td class="mono">capital_allocation[0].max_quote_amount</td><td class="mono">500.00</td><td><span class="badge layer">local</span> $HOME/config.yaml</td></tr>
+      <tr><td class="mono">pyramid[0].add_trigger_pct</td><td class="mono">1.5</td><td><span class="badge layer">local</span> $HOME/config.yaml</td></tr>
+      <tr><td class="mono">notify.slack.webhook_url</td><td class="mono">&lt;redacted&gt;</td><td><span class="badge layer">envvar</span> SLACK_WEBHOOK_URL</td></tr>
+      <tr><td class="mono">BINANCE_SPOT_API_KEY</td><td class="mono">&lt;redacted&gt;</td><td><span class="badge layer">envvar</span> .env</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Runner 注册表</h2>
+  <table>
+    <thead><tr><th>id</th><th>name</th><th>status</th><th>heartbeat</th><th>pid alive?</th></tr></thead>
+    <tbody>
+      <tr><td class="mono small">01HZA…0M1</td><td>spot-kdj</td><td><span class="badge running">running</span></td><td class="mono small">5s ago</td><td>✓</td></tr>
+      <tr><td class="mono small">01HZA…0M2</td><td>alt-kdj</td><td><span class="badge running">running</span></td><td class="mono small">12s ago</td><td>✓</td></tr>
+      <tr><td class="mono small">01HZA…0M3</td><td>copy-hello</td><td><span class="badge stopped">stopped</span></td><td class="muted small">—</td><td>—</td></tr>
+      <tr><td class="mono small">01HZA…0M4</td><td>hl-eth-kdj</td><td><span class="badge errored">errored</span></td><td class="mono small">7m ago</td><td>✗</td></tr>
+    </tbody>
+  </table>
+
+  <h2>结论</h2>
+  <div class="alert success">所有自检通过。1 个 runner 处于 errored 状态，建议人工 reset 或在 <a href="runners-list.html">Runners</a> 页处理。</div>
+
+  <h3>其它检查</h3>
+  <ul class="small muted" style="padding-left:24px;line-height:1.8">
+    <li>uv version: 0.4.18 ≥ required-version (0.4.x) ✓</li>
+    <li>Python: 3.12.3 ✓</li>
+    <li>import-linter contracts: 11 / 11 pass ✓</li>
+    <li>git workdir clean: ✓ (commit 823fc8d, branch main)</li>
+  </ul>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

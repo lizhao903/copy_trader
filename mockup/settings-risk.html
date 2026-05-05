@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Risk</title>
+<!-- spec: openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="settings-index.html">← Settings</a>
+  </div>
+  <h1>风控 · risk</h1>
+  <p class="subtitle">三件套熔断：日亏 / 总敞口 / 连亏。阈值通常落 <span class="badge layer">local</span>，可即时调整；策略与账户级别熔断分别配置。</p>
+
+  <div class="alert info">
+    <strong>RiskGate</strong> 在每根 bar 进入策略前调一次。任一熔断触发 → 该 (account, runner) 进入 SAFE 模式（仅平仓不开仓）+ critical alert 推送。
+  </div>
+
+  <h2>日亏熔断 · daily_loss_halt</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle" checked></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">阈值（USDT）</label>
+      <div class="control-col">
+        <input type="number" step="10" value="200">
+        <div class="hint">单账户当日 realized + unrealized PnL 跌破 -200 USDT 时触发。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">作用范围</label>
+      <div class="control-col">
+        <select>
+          <option>all accounts</option>
+          <option>per account</option>
+          <option>per runner</option>
+        </select>
+        <div class="hint">all：跨账户合计；per：每账户/每 runner 独立计算。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">当日状态</label>
+      <div class="control-col"><span class="badge healthy">未触发</span> <span class="muted">当日合计 PnL: +$48.20</span></div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">总敞口上限 · total_exposure_cap</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle" checked></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">阈值（USDT 等值）</label>
+      <div class="control-col">
+        <input type="number" step="100" value="2000">
+        <div class="hint">所有账户持仓 notional 合计的硬上限。超过时禁止新开仓。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">当前敞口</label>
+      <div class="control-col">
+        <span class="mono">$1,150.71</span> / $2,000.00 <span class="badge healthy">57.5%</span>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">连亏熔断 · consecutive_loss_halt</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">enabled</label>
+      <div class="control-col"><input type="checkbox" class="toggle" checked></div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">连亏笔数</label>
+      <div class="control-col">
+        <input type="number" step="1" value="5">
+        <div class="hint">同 (account, strategy) 上最近 N 笔交易若全部为亏损，进入 SAFE 模式。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">冷却时长（小时）</label>
+      <div class="control-col">
+        <input type="number" step="1" value="6">
+        <div class="hint">触发后停盘多少小时再自动恢复（仍允许人工 reset）。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">当前状态</label>
+      <div class="control-col">
+        <table style="font-size:12px">
+          <tr><td>spot · kdj_short_1h3m</td><td><span class="badge healthy">0/5 连亏</span></td></tr>
+          <tr><td>alt · kdj_short_1h3m</td><td><span class="badge warning">2/5 连亏</span></td></tr>
+          <tr><td>copy · hello</td><td class="muted">无最近交易</td></tr>
+          <tr><td>hl_eth · kdj_short_1h3m</td><td><span class="badge healthy">1/5 连亏</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="mt-24">手动 SAFE 模式开关</h2>
+  <div class="card">
+    <div class="form-row">
+      <label class="label-col">全局 SAFE 模式</label>
+      <div class="control-col">
+        <input type="checkbox" class="toggle">
+        <div class="hint">紧急停盘按钮。所有 runner 立即进入 SAFE（仅平仓不开仓），直至手动关闭。</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="label-col">紧急平仓</label>
+      <div class="control-col">
+        <button class="btn danger" data-action="emergency_flatten">⚠ 紧急平仓所有持仓</button>
+        <div class="hint">点击后跳转确认页（mockup 不会真平仓）。生产中由 <code>copy-trader emergency-flatten</code> CLI 执行。</div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+  <div class="row between">
+    <span class="muted small">未保存改动：0 项</span>
+    <div class="row gap-12">
+      <button class="btn">放弃改动</button>
+      <button class="btn primary">保存（立即生效）</button>
+    </div>
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Runners</title>
+<!-- spec: openspec/specs/runner-lifecycle/spec.md -->
+<!-- issue: lizhao903/copy_trader#28 (Dashboard /runners CRUD) #26 (RunnerService) #27 (CLI registry) -->
+<!-- fixture: 4 runner instances -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html" class="active">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row between mb-12">
+    <div>
+      <h1>Runners</h1>
+      <p class="subtitle">运行实例 = (venue + account + strategy + params)。CLI 与 Dashboard 共用 <code>RunnerService</code>。</p>
+    </div>
+    <div class="row">
+      <a href="runners-create.html" class="btn primary">+ 新建 Runner</a>
+      <button class="btn" data-action="reap">Reap (清理超时)</button>
+    </div>
+  </div>
+
+  <div class="alert info">
+    <strong>状态机</strong>：draft → stopped → starting → running → stopping → stopped；errored 分支可 reset 回 stopped。心跳超时 60s 标 errored。
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>id</th><th>name</th><th>venue</th><th>account</th><th>strategy</th><th>mode</th><th>status</th><th>heartbeat</th><th class="right">actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono small">01HZA1B2…0M1</td>
+        <td><a href="runners-detail.html">spot-kdj</a></td>
+        <td class="mono">binance.spot</td>
+        <td>spot</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td><span class="badge layer">live</span></td>
+        <td><span class="badge running">running</span></td>
+        <td class="mono small">5s ago</td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="stop" data-target="01HZA…0M1">Stop</button>
+          <button class="btn small" data-action="edit" data-target="01HZA…0M1">Edit</button>
+          <button class="btn small danger" data-action="delete" data-target="01HZA…0M1">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td class="mono small">01HZA1B2…0M2</td>
+        <td><a href="runners-detail.html">alt-kdj</a></td>
+        <td class="mono">binance.spot</td>
+        <td>alt</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td><span class="badge layer">live</span></td>
+        <td><span class="badge running">running</span></td>
+        <td class="mono small">12s ago</td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="stop" data-target="01HZA…0M2">Stop</button>
+          <button class="btn small" data-action="edit" data-target="01HZA…0M2">Edit</button>
+          <button class="btn small danger" data-action="delete" data-target="01HZA…0M2">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td class="mono small">01HZA1B2…0M3</td>
+        <td><a href="runners-detail.html">copy-hello</a></td>
+        <td class="mono">binance.spot</td>
+        <td>copy</td>
+        <td><code>hello</code></td>
+        <td><span class="badge layer">paper</span></td>
+        <td><span class="badge stopped">stopped</span></td>
+        <td class="mono small muted">—</td>
+        <td class="right nowrap">
+          <button class="btn small primary" data-action="start" data-target="01HZA…0M3">Start</button>
+          <button class="btn small" data-action="edit" data-target="01HZA…0M3">Edit</button>
+          <button class="btn small danger" data-action="delete" data-target="01HZA…0M3">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td class="mono small">01HZA1B2…0M4</td>
+        <td><a href="runners-detail.html">hl-eth-kdj</a></td>
+        <td class="mono">hyperliquid.spot</td>
+        <td>hl_eth</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td><span class="badge layer">live</span></td>
+        <td><span class="badge errored">errored</span></td>
+        <td class="mono small">7m ago</td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="reset" data-target="01HZA…0M4">Reset</button>
+          <button class="btn small" data-action="edit" data-target="01HZA…0M4">Edit</button>
+          <button class="btn small danger" data-action="delete" data-target="01HZA…0M4">Del</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert warning mt-24">
+    <strong>hl-eth-kdj</strong> 心跳超时（&gt; 60s），已被 <code>reap</code> 标记 <span class="badge errored">errored</span>。可 Reset 后重启，或 Delete（cascade kill PID 后从 registry 删除）。
+  </div>
+
+  <h3>列定义</h3>
+  <p class="small muted">id：uuid7 截断 · heartbeat：来自 <code>last_heartbeat</code> 字段，30s 间隔 · status 状态机详见 <code>openspec/specs/runner-lifecycle/spec.md</code>。</p>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

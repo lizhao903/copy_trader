@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Overview</title>
+<!-- spec: openspec/specs/pnl-single-source/spec.md, openspec/specs/dashboard-mockup/spec.md -->
+<!-- issue: lizhao903/copy_trader#28 (M4 dashboard 基线) -->
+<!-- fixture: 4 accounts (spot/alt/copy/hl_eth) -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html" class="active">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row between mb-12">
+    <div>
+      <h1>Overview</h1>
+      <p class="subtitle">PnL 走 PnlEngine（账本→引擎→缓存）。所有数字均为占位 fixture。</p>
+    </div>
+    <div class="row">
+      <span class="badge healthy">系统健康</span>
+      <span class="muted small mono">last reconcile: 2026-05-05 14:32:11 UTC</span>
+    </div>
+  </div>
+
+  <h2>账户余额与持仓</h2>
+  <div class="cards">
+    <div class="card">
+      <span class="label">spot · binance.spot</span>
+      <div class="value">1,245.30 <span class="muted small">USDT</span></div>
+      <div class="delta">SOL 5.2340 @ 178.42 · entry 175.10</div>
+      <div class="delta up mt-12">unrealized +$17.39 · realized +$234.50</div>
+    </div>
+    <div class="card">
+      <span class="label">alt · binance.spot</span>
+      <div class="value">850.00 <span class="muted small">USDT</span></div>
+      <div class="delta">ETH 0.4200 @ 2,310.50 · entry 2,329.80</div>
+      <div class="delta down mt-12">unrealized -$8.10 · realized +$120.00</div>
+    </div>
+    <div class="card">
+      <span class="label">copy · binance.spot</span>
+      <div class="value">600.00 <span class="muted small">USDT</span></div>
+      <div class="delta muted">无仓位（runner stopped）</div>
+      <div class="delta down mt-12">unrealized $0 · realized -$45.20</div>
+    </div>
+    <div class="card">
+      <span class="label">hl_eth · hyperliquid.spot</span>
+      <div class="value">320.00 <span class="muted small">USDC</span></div>
+      <div class="delta">ETH-USD 0.1500 @ 2,308.10 · entry 2,288.10</div>
+      <div class="delta up mt-12">unrealized +$3.00 · realized +$88.20</div>
+    </div>
+  </div>
+
+  <h2>系统状态</h2>
+  <div class="cards">
+    <div class="card">
+      <span class="label">Runners</span>
+      <div class="value">2 <span class="muted small">/ 4 active</span></div>
+      <div class="delta"><span class="badge running">running 2</span> <span class="badge stopped">stopped 1</span> <span class="badge errored">errored 1</span></div>
+    </div>
+    <div class="card">
+      <span class="label">Reconcile</span>
+      <div class="value">1 <span class="muted small">drift</span></div>
+      <div class="delta">cache_drift 自动修正 · 无 SAFE 模式</div>
+    </div>
+    <div class="card">
+      <span class="label">Critical Alerts (24h)</span>
+      <div class="value">0</div>
+      <div class="delta">阈值：reconcile drift &gt; 0 / PnL deviation &gt; 5%</div>
+    </div>
+    <div class="card">
+      <span class="label">Ledger</span>
+      <div class="value">1,823 <span class="muted small">fills</span></div>
+      <div class="delta">schema_version 2 · machine_id b3f2…7c9d</div>
+    </div>
+  </div>
+
+  <h2>近期 Fills</h2>
+  <table>
+    <thead>
+      <tr><th>ts (UTC)</th><th>account</th><th>runner</th><th>symbol</th><th>side</th><th class="right">qty</th><th class="right">price</th><th class="right">fee</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">14:31:08</td><td>spot</td><td>spot-kdj</td><td>SOLUSDT</td><td><span class="badge healthy">BUY</span></td><td class="right mono">0.5230</td><td class="right mono">178.42</td><td class="right mono">0.09</td></tr>
+      <tr><td class="mono">14:18:42</td><td>alt</td><td>alt-kdj</td><td>ETHUSDT</td><td><span class="badge errored">SELL</span></td><td class="right mono">0.0500</td><td class="right mono">2,310.50</td><td class="right mono">0.12</td></tr>
+      <tr><td class="mono">13:45:11</td><td>hl_eth</td><td>hl-eth-kdj</td><td>ETH-USD</td><td><span class="badge healthy">BUY</span></td><td class="right mono">0.0500</td><td class="right mono">2,288.10</td><td class="right mono">0.06</td></tr>
+      <tr><td class="mono">12:02:30</td><td>spot</td><td>spot-kdj</td><td>SOLUSDT</td><td><span class="badge errored">SELL</span></td><td class="right mono">1.0000</td><td class="right mono">181.90</td><td class="right mono">0.18</td></tr>
+      <tr><td class="mono">11:14:55</td><td>alt</td><td>alt-kdj</td><td>ETHUSDT</td><td><span class="badge healthy">BUY</span></td><td class="right mono">0.1500</td><td class="right mono">2,329.80</td><td class="right mono">0.35</td></tr>
+    </tbody>
+  </table>
+  <p class="mt-12 small muted">完整账本可在 <code>copy-trader registry list</code> + <code>copy-trader reconcile --account &lt;n&gt;</code> 查看；本表只展示最近 5 条。</p>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

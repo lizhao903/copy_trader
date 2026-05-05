@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Strategies</title>
+<!-- spec: openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="settings-index.html">← Settings</a>
+  </div>
+  <div class="row between mb-12">
+    <div>
+      <h1>策略库 · strategies</h1>
+      <p class="subtitle">仅 <span class="badge layer">base</span> 层。新增 / 移除策略需 PR review。每条 (account, strategy) 在 capital / pyramid / fixed_position 中按需配置。</p>
+    </div>
+    <button class="btn primary" data-action="add_strategy">+ 注册策略</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>name</th><th>module</th><th>使用中的 runner</th><th>默认参数</th><th class="right">actions</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>kdj_short_1h3m</strong></td>
+        <td class="mono small">copy_trader.strategies.kdj_short_1h3m</td>
+        <td>
+          <a href="runners-detail.html">spot-kdj</a> ·
+          <a href="runners-detail.html">alt-kdj</a> ·
+          <a href="runners-detail.html">hl-eth-kdj</a>
+        </td>
+        <td>
+          <details>
+            <summary class="small">展开 6 个参数</summary>
+            <dl class="kv mt-12">
+              <dt>oversold</dt><dd>20</dd>
+              <dt>overbought</dt><dd>78</dd>
+              <dt>stop_loss_pct</dt><dd>4.5</dd>
+              <dt>take_profit_pct</dt><dd>6.5</dd>
+              <dt>early_stop_pct</dt><dd>2.0</dd>
+              <dt>trail_arm_pct</dt><dd>3.5</dd>
+            </dl>
+            <p class="small muted mt-12">通过 runner 的 <code>params_override</code> 字段做实例级覆盖（见 runner detail）。</p>
+          </details>
+        </td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="edit_defaults" data-target="kdj_short_1h3m">编辑默认</button>
+          <button class="btn small danger" data-action="delete" data-target="kdj_short_1h3m">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>hello</strong></td>
+        <td class="mono small">copy_trader.strategies.hello</td>
+        <td><a href="runners-detail.html">copy-hello</a> <span class="badge stopped">stopped</span></td>
+        <td>
+          <details>
+            <summary class="small">展开 1 个参数</summary>
+            <dl class="kv mt-12">
+              <dt>echo_interval_sec</dt><dd>30</dd>
+            </dl>
+            <p class="small muted mt-12">占位策略。仅打 heartbeat，不下单；用于验证 runner 主循环健康。</p>
+          </details>
+        </td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="edit_defaults" data-target="hello">编辑默认</button>
+          <button class="btn small danger" data-action="delete" data-target="hello">Del</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>注册新策略</h2>
+  <p class="small muted">注册策略需要：</p>
+  <ol class="small muted" style="padding-left:24px;line-height:1.8">
+    <li>在 <code>src/copy_trader/strategies/&lt;name&gt;.py</code> 实现 <code>Strategy</code> Protocol</li>
+    <li>在 <code>config/base.yaml::strategies.&lt;name&gt;</code> 中注册 module 路径与默认参数</li>
+    <li>提交 PR，CI 会跑 import-linter（确保 strategies 只依赖 core + marketdata）与 pytest</li>
+  </ol>
+
+  <div class="alert info mt-12">
+    Dashboard 不能直接注册策略——这属于结构性变更，必须走 git PR。本页"注册策略"按钮会跳转到 <code>config/base.yaml</code> 的编辑表单（draft PR 模式）。
+  </div>
+
+  <hr>
+  <div class="row between">
+    <span class="muted small">未保存改动：0 项 · 草稿 PR：无</span>
+    <div class="row gap-12">
+      <button class="btn primary" data-action="open_pr">创建 draft PR（base 改动）</button>
+    </div>
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

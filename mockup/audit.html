@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Audit</title>
+<!-- spec: openspec/specs/config-overlay/spec.md (Dashboard settings center performs layered writes) -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html" class="active">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <h1>Dashboard Audit Log</h1>
+  <p class="subtitle">Dashboard 设置中心的所有写入动作。来源 <code>$COPY_TRADER_HOME/logs/dashboard_audit.log</code>。敏感字段值掩码为 <code>&lt;redacted&gt;</code>。</p>
+
+  <div class="row mb-12">
+    <select style="width:160px"><option>近 24 小时</option><option>近 7 天</option><option>近 30 天</option><option>全部</option></select>
+    <select style="width:160px"><option>所有 layer</option><option>local</option><option>env</option><option>base</option></select>
+    <input type="text" placeholder="按字段路径过滤..." style="width:300px">
+    <button class="btn">应用过滤</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>ts (UTC)</th><th>actor</th><th>field path</th><th>layer</th><th>before → after</th><th>action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono small">2026-05-05 14:22:31</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">pyramid[0].add_trigger_pct</td>
+        <td><span class="badge layer">local</span></td>
+        <td class="mono small">1.5 → 1.8</td>
+        <td><span class="badge healthy">applied</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-05 14:22:31</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">pyramid[0].max_rounds</td>
+        <td><span class="badge layer">local</span></td>
+        <td class="mono small">2 → 3</td>
+        <td><span class="badge healthy">applied</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-05 13:48:02</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">capital_allocation[0].max_quote_amount</td>
+        <td><span class="badge layer">local</span></td>
+        <td class="mono small">450.00 → 500.00</td>
+        <td><span class="badge healthy">applied</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-05 11:15:44</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">accounts.spot.symbols</td>
+        <td><span class="badge layer">base</span></td>
+        <td class="mono small">[BTCUSDT] → [SOLUSDT, BTCUSDT]</td>
+        <td><span class="badge warning">draft PR #14</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-05 10:42:17</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">notify.slack.channel</td>
+        <td><span class="badge layer">env</span></td>
+        <td class="mono small">#alpha → #copy-trader-prod</td>
+        <td><span class="badge warning">draft PR #14</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-05 10:42:00</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">notify.slack.webhook_url</td>
+        <td><span class="badge layer">envvar</span></td>
+        <td class="mono small">&lt;redacted&gt; → &lt;redacted&gt;</td>
+        <td><span class="badge errored">rejected</span> 敏感字段不可在 dashboard 改</td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-04 22:03:51</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">risk.daily_loss_halt.threshold</td>
+        <td><span class="badge layer">local</span></td>
+        <td class="mono small">150 → 200</td>
+        <td><span class="badge healthy">applied</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-04 18:47:09</td>
+        <td class="small">cli@host-mbp16</td>
+        <td class="mono small">pyramid[1].enabled</td>
+        <td><span class="badge layer">local</span></td>
+        <td class="mono small">false → true</td>
+        <td><span class="badge healthy">applied</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-04 18:46:55</td>
+        <td class="small">cli@host-mbp16</td>
+        <td class="mono small">pyramid[1].first_entry_fraction</td>
+        <td><span class="badge layer">local</span></td>
+        <td class="mono small">0.50 → 0.40</td>
+        <td><span class="badge healthy">applied</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-03 09:11:23</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">strategies.kdj_short_1h3m.params.oversold</td>
+        <td><span class="badge layer">base</span></td>
+        <td class="mono small">22 → 20</td>
+        <td><span class="badge healthy">PR #11 merged</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-03 09:10:48</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">strategies.kdj_short_1h3m.params.stop_loss_pct</td>
+        <td><span class="badge layer">base</span></td>
+        <td class="mono small">5.0 → 4.5</td>
+        <td><span class="badge healthy">PR #11 merged</span></td>
+      </tr>
+      <tr>
+        <td class="mono small">2026-05-02 16:33:14</td>
+        <td class="small">dashboard@127.0.0.1</td>
+        <td class="mono small">accounts.hl_eth (NEW)</td>
+        <td><span class="badge layer">base</span></td>
+        <td class="mono small">— → {venue: hyperliquid.spot, …}</td>
+        <td><span class="badge healthy">PR #9 merged</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="small muted mt-12">条目数：12 显示 / 共 47 (近 7 天)。Audit log 保留期：90 天；过期后归档到 <code>logs/audit-archive/</code>。</p>
+
+  <div class="alert info mt-24">
+    <strong>说明</strong>：local 层写入即时生效；env / base 层写入会在 git workdir 形成改动并附加到一个 draft PR（同一会话内合并）。敏感字段在 dashboard 一律拒绝写入并记录为 <code>rejected</code>。
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

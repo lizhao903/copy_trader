@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Capital Allocation</title>
+<!-- spec: openspec/specs/config-overlay/spec.md -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="settings-index.html">← Settings</a>
+  </div>
+  <div class="row between mb-12">
+    <div>
+      <h1>资金分配 · capital_allocation</h1>
+      <p class="subtitle">颗粒 (account, strategy)。<code>max_quote_amount</code> 与 <code>reserve_quote_amount</code> 通常落 <span class="badge layer">local</span>，金额改动可即时生效；新增 (account, strategy) 组合属 <span class="badge layer">base</span>。</p>
+    </div>
+    <button class="btn primary" data-action="add_capital_slice">+ 新增分配</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>account</th><th>strategy</th><th>quote_asset</th>
+        <th class="right">max_quote_amount</th>
+        <th class="right">reserve_quote_amount</th>
+        <th class="right">当前已用</th>
+        <th>layer</th>
+        <th class="right">actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>spot</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td>USDT</td>
+        <td class="right"><input type="number" value="500.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right"><input type="number" value="50.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right mono">$317.40 <span class="muted small">(63%)</span></td>
+        <td><span class="badge layer">local</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="reset" data-target="spot:kdj_short_1h3m">Reset</button>
+          <button class="btn small danger" data-action="delete" data-target="spot:kdj_short_1h3m">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td>alt</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td>USDT</td>
+        <td class="right"><input type="number" value="800.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right"><input type="number" value="80.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right mono">$487.50 <span class="muted small">(61%)</span></td>
+        <td><span class="badge layer">local</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="reset" data-target="alt:kdj_short_1h3m">Reset</button>
+          <button class="btn small danger" data-action="delete" data-target="alt:kdj_short_1h3m">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td>copy</td>
+        <td><code>hello</code></td>
+        <td>USDT</td>
+        <td class="right"><input type="number" value="200.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right"><input type="number" value="20.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right mono muted">$0.00 (runner stopped)</td>
+        <td><span class="badge layer">env</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="reset" data-target="copy:hello">Reset</button>
+          <button class="btn small danger" data-action="delete" data-target="copy:hello">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td>hl_eth</td>
+        <td><code>kdj_short_1h3m</code></td>
+        <td>USDC</td>
+        <td class="right"><input type="number" value="300.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right"><input type="number" value="30.00" step="10" style="width:100px;text-align:right"></td>
+        <td class="right mono">$345.81 <span class="badge errored">超额</span></td>
+        <td><span class="badge layer">base</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="reset" data-target="hl_eth:kdj_short_1h3m">Reset</button>
+          <button class="btn small danger" data-action="delete" data-target="hl_eth:kdj_short_1h3m">Del</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert error mt-12">
+    <strong>hl_eth · kdj_short_1h3m</strong> 当前已用 $345.81 已超过 max_quote_amount $300.00。runner 不会再开新仓，但既有持仓不受影响（可在 <a href="runners-detail.html">runner detail</a> 平仓后释放额度）。
+  </div>
+
+  <h2>分配总览</h2>
+  <div class="cards">
+    <div class="card">
+      <span class="label">总额度（max）</span>
+      <div class="value">1,800 <span class="muted small">USDT 等值</span></div>
+      <div class="delta">USDT 1500 + USDC 300 ≈ $1,800</div>
+    </div>
+    <div class="card">
+      <span class="label">已用</span>
+      <div class="value">1,150.71 <span class="muted small">USDT</span></div>
+      <div class="delta">63.9% 利用率</div>
+    </div>
+    <div class="card">
+      <span class="label">预留 (reserve)</span>
+      <div class="value">180.00 <span class="muted small">合计</span></div>
+      <div class="delta muted">用于滚仓加仓 / 回撤救援</div>
+    </div>
+  </div>
+
+  <hr>
+  <div class="row between">
+    <span class="muted small">未保存改动：3 个数值 · 全部为 <span class="badge layer">local</span> 层</span>
+    <div class="row gap-12">
+      <button class="btn">放弃改动</button>
+      <button class="btn primary">保存（立即生效）</button>
+    </div>
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

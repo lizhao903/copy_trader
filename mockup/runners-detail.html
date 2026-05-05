@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Runner Detail</title>
+<!-- spec: openspec/specs/runner-lifecycle/spec.md -->
+<!-- issue: lizhao903/copy_trader#28 -->
+<!-- fixture: spot-kdj running -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html" class="active">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="runners-list.html">← Runners</a>
+  </div>
+  <div class="row between mb-12">
+    <div>
+      <h1>spot-kdj <span class="badge running">running</span></h1>
+      <p class="subtitle mono small">id: 01HZA1B2C3D4E5F6G7H8J9K0M1 · 创建于 2026-04-29 03:14:55 UTC</p>
+    </div>
+    <div class="row">
+      <button class="btn" data-action="stop" data-target="01HZA…0M1">Stop</button>
+      <button class="btn" data-action="edit" data-target="01HZA…0M1">Edit</button>
+      <button class="btn danger" data-action="delete" data-target="01HZA…0M1">Delete</button>
+    </div>
+  </div>
+
+  <h2>基本信息</h2>
+  <dl class="kv">
+    <dt>name</dt><dd>spot-kdj</dd>
+    <dt>venue</dt><dd>binance.spot</dd>
+    <dt>account</dt><dd>spot <span class="muted">(BINANCE_SPOT_*)</span></dd>
+    <dt>strategy</dt><dd>kdj_short_1h3m</dd>
+    <dt>mode</dt><dd>live</dd>
+    <dt>params_override</dt><dd>{"oversold": 18, "stop_loss_pct": 4.0}</dd>
+    <dt>pid</dt><dd>48213</dd>
+    <dt>started_at</dt><dd>2026-05-05 09:00:12 UTC <span class="muted">(5h32m 前)</span></dd>
+    <dt>last_heartbeat</dt><dd>2026-05-05 14:32:08 UTC <span class="muted">(5s 前)</span></dd>
+    <dt>state files</dt><dd>state/position_01HZA…0M1.json, pids/01HZA…0M1.pid</dd>
+  </dl>
+
+  <h2>当前持仓</h2>
+  <table>
+    <thead>
+      <tr><th>symbol</th><th class="right">qty</th><th class="right">entry</th><th class="right">peak</th><th class="right">price</th><th class="right">unrealized</th><th>pyramid stage</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>SOLUSDT</code></td>
+        <td class="right mono">5.2340</td>
+        <td class="right mono">175.10</td>
+        <td class="right mono">182.40</td>
+        <td class="right mono">178.42</td>
+        <td class="right mono"><span class="delta up">+$17.39</span></td>
+        <td><span class="badge layer">round 1/2</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>近期 Fills（来自 ledger，非 cache）</h2>
+  <table>
+    <thead>
+      <tr><th>ts (UTC)</th><th>side</th><th class="right">qty</th><th class="right">price</th><th class="right">fee</th><th>order_id</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">14:31:08</td><td><span class="badge healthy">BUY</span></td><td class="right mono">0.5230</td><td class="right mono">178.42</td><td class="right mono">0.09</td><td class="mono small">bn_4582193</td></tr>
+      <tr><td class="mono">12:02:30</td><td><span class="badge errored">SELL</span></td><td class="right mono">1.0000</td><td class="right mono">181.90</td><td class="right mono">0.18</td><td class="mono small">bn_4582101</td></tr>
+      <tr><td class="mono">11:45:11</td><td><span class="badge healthy">BUY</span></td><td class="right mono">0.7110</td><td class="right mono">175.20</td><td class="right mono">0.13</td><td class="mono small">bn_4582012</td></tr>
+      <tr><td class="mono">10:18:42</td><td><span class="badge healthy">BUY</span></td><td class="right mono">5.0000</td><td class="right mono">175.10</td><td class="right mono">0.88</td><td class="mono small">bn_4581885</td></tr>
+      <tr><td class="mono">09:00:55</td><td><span class="badge healthy">BUY</span></td><td class="right mono">0.0000</td><td class="right mono">—</td><td class="right mono">—</td><td class="mono small">init scan</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted mt-12">完整 fills 历史走 <code>copy-trader registry log 01HZA…0M1 --kind fills</code>。</p>
+
+  <h2>最近日志预览</h2>
+  <pre class="log">2026-05-05 14:32:08 [INFO]  heartbeat ok / position SOL 5.2340 / unrealized +$17.39
+2026-05-05 14:31:08 [INFO]  fill: BUY 0.523 SOLUSDT @ 178.42 (pyramid round 1/2)
+2026-05-05 14:30:55 [INFO]  signal: K=18.4 D=22.1 J=11.0 → entry trigger
+2026-05-05 14:30:00 [INFO]  bar close 3m / fetched klines / KDJ updated
+2026-05-05 14:27:00 [INFO]  bar close 3m / no signal / oversold check 22.5 &gt; 20
+2026-05-05 14:24:30 [INFO]  reconcile drift check: ledger == exchange == cache
+2026-05-05 14:24:00 [INFO]  bar close 3m / no signal
+...
+</pre>
+  <p class="small muted">完整日志：<code>$COPY_TRADER_HOME/logs/run_01HZA…0M1.log</code>（倒序写入）</p>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

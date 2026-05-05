@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Accounts</title>
+<!-- spec: openspec/specs/config-overlay/spec.md (Requirement: Settings schema covers accounts...) -->
+<!-- issue: lizhao903/copy_trader#29 -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html" class="active">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="settings-index.html">← Settings</a>
+  </div>
+  <div class="row between mb-12">
+    <div>
+      <h1>账户维护 · accounts</h1>
+      <p class="subtitle">字段层 <span class="badge layer">base</span>（结构性，PR-only）+ <span class="badge layer">env</span>（启停可在 env yaml 覆盖）。敏感凭证仅经 <code>$COPY_TRADER_HOME/secrets/.env</code> 注入。</p>
+    </div>
+    <button class="btn primary" data-action="add_account">+ 新增账户</button>
+  </div>
+
+  <div class="alert warning">
+    新增 / 删除账户属于结构性变更（<span class="badge layer">base</span>），保存后会写到 <code>config/base.yaml</code> 并要求创建 draft PR。
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>name</th><th>venue</th><th>enabled</th><th>credentials_alias</th><th>symbols</th><th>当前 runner</th><th class="right">actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>spot</strong></td>
+        <td class="mono">binance.spot</td>
+        <td><input type="checkbox" class="toggle" checked></td>
+        <td class="mono small">BINANCE_SPOT <span class="muted">_API_KEY/_SECRET_KEY</span></td>
+        <td><span class="chip">SOLUSDT</span></td>
+        <td><a href="runners-detail.html">spot-kdj</a> <span class="badge running">running</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="edit_symbols" data-target="spot">Edit symbols</button>
+          <button class="btn small danger" data-action="delete" data-target="spot">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>alt</strong></td>
+        <td class="mono">binance.spot</td>
+        <td><input type="checkbox" class="toggle" checked></td>
+        <td class="mono small">BINANCE_FUTURES <span class="muted">（已切现货，名字保留）</span></td>
+        <td><span class="chip">ETHUSDT</span><span class="chip">BTCUSDT</span></td>
+        <td><a href="runners-detail.html">alt-kdj</a> <span class="badge running">running</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="edit_symbols" data-target="alt">Edit symbols</button>
+          <button class="btn small danger" data-action="delete" data-target="alt">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>copy</strong></td>
+        <td class="mono">binance.spot</td>
+        <td><input type="checkbox" class="toggle" checked></td>
+        <td class="mono small">BINANCE_COPY_TRADE <span class="muted">（带单 API Key）</span></td>
+        <td><span class="chip">BTCUSDT</span></td>
+        <td><a href="runners-detail.html">copy-hello</a> <span class="badge stopped">stopped</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="edit_symbols" data-target="copy">Edit symbols</button>
+          <button class="btn small danger" data-action="delete" data-target="copy">Del</button>
+        </td>
+      </tr>
+      <tr>
+        <td><strong>hl_eth</strong></td>
+        <td class="mono">hyperliquid.spot</td>
+        <td><input type="checkbox" class="toggle" checked></td>
+        <td class="mono small">HYPERLIQUID_MAIN <span class="muted">_PRIVATE_KEY/_ACCOUNT_ADDRESS</span></td>
+        <td><span class="chip">ETH-USD</span></td>
+        <td><a href="runners-detail.html">hl-eth-kdj</a> <span class="badge errored">errored</span></td>
+        <td class="right nowrap">
+          <button class="btn small" data-action="edit_symbols" data-target="hl_eth">Edit symbols</button>
+          <button class="btn small danger" data-action="delete" data-target="hl_eth">Del</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>凭证状态（敏感字段不显示原值）</h2>
+  <table>
+    <thead><tr><th>account</th><th>API Key</th><th>Secret</th><th>Private Key</th><th>最后修改</th><th class="right">操作</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>spot</td>
+        <td><code>&lt;set&gt;</code></td>
+        <td><code>&lt;set&gt;</code></td>
+        <td class="muted">—</td>
+        <td class="mono small">2026-04-12 09:33 UTC</td>
+        <td class="right"><button class="btn small" data-action="edit_secret" data-target="spot">查看注入指引</button></td>
+      </tr>
+      <tr>
+        <td>alt</td>
+        <td><code>&lt;set&gt;</code></td>
+        <td><code>&lt;set&gt;</code></td>
+        <td class="muted">—</td>
+        <td class="mono small">2026-04-12 09:35 UTC</td>
+        <td class="right"><button class="btn small" data-action="edit_secret" data-target="alt">查看注入指引</button></td>
+      </tr>
+      <tr>
+        <td>copy</td>
+        <td><code>&lt;set&gt;</code></td>
+        <td><code>&lt;set&gt;</code></td>
+        <td class="muted">—</td>
+        <td class="mono small">2026-04-12 09:38 UTC</td>
+        <td class="right"><button class="btn small" data-action="edit_secret" data-target="copy">查看注入指引</button></td>
+      </tr>
+      <tr>
+        <td>hl_eth</td>
+        <td class="muted">—</td>
+        <td class="muted">—</td>
+        <td><code>&lt;set&gt;</code></td>
+        <td class="mono small">2026-04-12 09:40 UTC</td>
+        <td class="right"><button class="btn small" data-action="edit_secret" data-target="hl_eth">查看注入指引</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="small muted mt-12">凭证编辑指引：在 <code>$COPY_TRADER_HOME/secrets/.env</code> 中设置对应 env vars，然后 systemd reload 或前台重启 runner。Dashboard 不会写入凭证。</p>
+
+  <hr>
+  <div class="row between">
+    <span class="muted small">未保存：0 项 · 草稿 PR 队列：1 项（symbols 更新）</span>
+    <div class="row gap-12">
+      <button class="btn">保存 local 改动</button>
+      <button class="btn primary" data-action="open_pr">创建 draft PR（base/env 改动）</button>
+    </div>
+  </div>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

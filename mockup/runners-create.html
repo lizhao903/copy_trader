@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Create Runner</title>
+<!-- spec: openspec/specs/runner-lifecycle/spec.md -->
+<!-- issue: lizhao903/copy_trader#27 (CLI registry) #28 (Dashboard) -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html" class="active">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <div class="row mb-12 small">
+    <a href="runners-list.html">← Runners</a>
+  </div>
+  <h1>新建 Runner</h1>
+  <p class="subtitle">Runner 实例 = (venue + account + strategy + params)。新建后状态为 <span class="badge stopped">stopped</span>，需要点 Start 才会拉起进程。</p>
+
+  <div class="alert info">
+    后端走 <code>RunnerService.create()</code>。CLI 等价命令：<code>copy-trader registry create --name &lt;n&gt; --venue &lt;v&gt; --account &lt;a&gt; --strategy &lt;s&gt;</code>
+  </div>
+
+  <form>
+    <div class="form-row">
+      <label class="label-col" for="name">name</label>
+      <div class="control-col">
+        <input id="name" name="name" type="text" placeholder="例如 spot-kdj-v2" required>
+        <div class="hint">用户友好名，账户内唯一；用于 systemd unit / 日志文件命名空间。</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="label-col" for="venue">venue</label>
+      <div class="control-col">
+        <select id="venue" name="venue">
+          <option value="binance.spot">binance.spot</option>
+          <option value="hyperliquid.spot">hyperliquid.spot</option>
+          <option value="paper.binance.spot">paper.binance.spot（模拟，不打钱）</option>
+          <option value="paper.hyperliquid.spot">paper.hyperliquid.spot</option>
+        </select>
+        <div class="hint">从 <code>ExchangeRegistry</code> 注册项中选取。</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="label-col" for="account">account</label>
+      <div class="control-col">
+        <select id="account" name="account">
+          <option value="spot">spot · binance.spot · SOLUSDT</option>
+          <option value="alt">alt · binance.spot · ETHUSDT, BTCUSDT</option>
+          <option value="copy">copy · binance.spot · BTCUSDT</option>
+          <option value="hl_eth">hl_eth · hyperliquid.spot · ETH-USD</option>
+        </select>
+        <div class="hint">来自 <code>config/base.yaml::accounts</code>。改 venue 时本下拉自动过滤。</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="label-col" for="strategy">strategy</label>
+      <div class="control-col">
+        <select id="strategy" name="strategy">
+          <option value="kdj_short_1h3m">kdj_short_1h3m · 默认参数 oversold=20 / overbought=78 / stop_loss_pct=4.5</option>
+          <option value="hello">hello · 占位空策略，仅打 heartbeat</option>
+        </select>
+        <div class="hint">来自 <code>config/base.yaml::strategies</code>。</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="label-col">mode</label>
+      <div class="control-col">
+        <label class="row gap-12"><input type="radio" name="mode" value="live" checked> live<span class="muted small">（真单）</span></label>
+        <label class="row gap-12"><input type="radio" name="mode" value="paper"> paper<span class="muted small">（PaperExchange 模拟）</span></label>
+        <label class="row gap-12"><input type="radio" name="mode" value="dry-run"> dry-run<span class="muted small">（不下单，只跑信号）</span></label>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="label-col" for="params">params_override</label>
+      <div class="control-col">
+        <textarea id="params" name="params_override" placeholder='{}'>{
+  "oversold": 18,
+  "stop_loss_pct": 4.0
+}</textarea>
+        <div class="hint">JSON。仅覆盖策略默认参数中的指定 key。空 = 用策略默认值。</div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="label-col">env_tag</label>
+      <div class="control-col">
+        <span class="badge layer">dev</span>
+        <span class="hint">由 <code>COPY_TRADER_ENV</code> 决定，不可在表单中改。</span>
+      </div>
+    </div>
+
+    <div class="row mt-24 gap-12">
+      <button type="submit" class="btn primary">创建（保存为 stopped）</button>
+      <button type="button" class="btn" data-action="create_and_start">创建并立即启动</button>
+      <a href="runners-list.html" class="btn">取消</a>
+    </div>
+  </form>
+
+  <hr>
+  <p class="small muted">提交后跳转 <a href="runners-detail.html">runners-detail.html</a>，新实例处于 <span class="badge stopped">stopped</span> 状态等待 Start。</p>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>

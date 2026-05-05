@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>copy_trader · Mockup Index</title>
+<!-- spec: openspec/specs/dashboard-mockup/spec.md -->
+<!-- issue: lizhao903/copy_trader (mockup 入口，非生产路由) -->
+<!-- fixture: see mockup/README.md -->
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
+<nav class="topnav">
+  <a href="index.html" class="brand">copy_trader</a>
+  <a href="overview.html">Overview</a>
+  <a href="runners-list.html">Runners</a>
+  <a href="settings-index.html">Settings</a>
+  <a href="doctor.html">Doctor</a>
+  <a href="audit.html">Audit</a>
+  <a href="reconcile.html">Reconcile</a>
+  <span class="env-badge">env: dev</span>
+</nav>
+<main class="container">
+  <h1>Dashboard Mockup</h1>
+  <p class="subtitle">copy_trader 静态 UI 草图。共 16 个独立页面，纯静态、离线可用，仅用于驱动 M4 后端实装的 UX 决策。</p>
+
+  <div class="alert info">
+    <strong>实装来源</strong>：每个页面 head 注释引用对应 spec（<code>openspec/specs/&lt;capability&gt;/spec.md</code>）与 GitHub issue（M4 issue #23–#29 等）。所有数据均为占位假值。
+  </div>
+
+  <h2>总览</h2>
+  <div class="cards">
+    <div class="card">
+      <a href="overview.html" class="title">Overview</a>
+      <span class="muted small">账户余额、unrealized PnL、系统健康徽章、reconcile 状态摘要</span>
+    </div>
+    <div class="card">
+      <a href="doctor.html" class="title">Doctor</a>
+      <span class="muted small">runtime root / env_tag / machine_id / lock 状态 / 配置来源 / ledger schema</span>
+    </div>
+  </div>
+
+  <h2>Runners</h2>
+  <div class="cards">
+    <div class="card">
+      <a href="runners-list.html" class="title">Runners 列表</a>
+      <span class="muted small">实例表 + 状态徽章 + 启停/编辑/删除</span>
+    </div>
+    <div class="card">
+      <a href="runners-detail.html" class="title">Runner 详情</a>
+      <span class="muted small">基本信息 + 最近 fills + 当前持仓 + 日志预览</span>
+    </div>
+    <div class="card">
+      <a href="runners-create.html" class="title">创建 Runner</a>
+      <span class="muted small">name / venue / account / strategy / mode / params_override</span>
+    </div>
+  </div>
+
+  <h2>Settings 设置中心</h2>
+  <div class="cards">
+    <div class="card">
+      <a href="settings-index.html" class="title">设置中心入口</a>
+      <span class="muted small">七段卡片导航 + 配置 layer 状态摘要</span>
+    </div>
+    <div class="card">
+      <a href="settings-accounts.html" class="title">账户维护</a>
+      <span class="muted small">venue / enabled / credentials_alias / symbols</span>
+    </div>
+    <div class="card">
+      <a href="settings-capital.html" class="title">资金分配</a>
+      <span class="muted small">(account, strategy) → max_quote_amount / reserve</span>
+    </div>
+    <div class="card">
+      <a href="settings-pyramid.html" class="title">滚仓</a>
+      <span class="muted small">first_entry_fraction / add_trigger_pct / max_rounds</span>
+    </div>
+    <div class="card">
+      <a href="settings-fixed-position.html" class="title">固定仓位</a>
+      <span class="muted small">mode (qty/quote) / 上限价；与滚仓互斥</span>
+    </div>
+    <div class="card">
+      <a href="settings-strategies.html" class="title">策略库</a>
+      <span class="muted small">name / module / 默认参数</span>
+    </div>
+    <div class="card">
+      <a href="settings-notify.html" class="title">IM 网关</a>
+      <span class="muted small">Slack / Telegram / Feishu / Dingtalk adapter 配置</span>
+    </div>
+    <div class="card">
+      <a href="settings-risk.html" class="title">风控</a>
+      <span class="muted small">日亏熔断 / 总敞口上限 / 连亏熔断</span>
+    </div>
+  </div>
+
+  <h2>系统与审计</h2>
+  <div class="cards">
+    <div class="card">
+      <a href="audit.html" class="title">Dashboard Audit</a>
+      <span class="muted small">设置中心写入审计：字段路径 / 层 / before/after 掩码</span>
+    </div>
+    <div class="card">
+      <a href="reconcile.html" class="title">Reconcile</a>
+      <span class="muted small">三级 diff：cache_drift / ledger_exchange_mismatch / unknown_position</span>
+    </div>
+  </div>
+
+  <hr>
+  <p class="small muted">spec：<code>openspec/specs/dashboard-mockup/spec.md</code> · 16 个文件 + 1 个 stylesheet · 修改导航请同步全部 16 个 HTML（详见 README.md）</p>
+</main>
+<script>
+document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
+document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+</script>
+</body>
+</html>
