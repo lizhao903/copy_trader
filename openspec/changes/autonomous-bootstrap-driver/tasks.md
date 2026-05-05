@@ -77,6 +77,6 @@
 
 ## 12. 提交与归档
 
-- [ ] 12.1 全部 task 完成后 commit `feat(driver): scaffold autonomous overnight bootstrap driver`
-- [ ] 12.2 push 到本仓 main（脚本本身不接触 issue 队列、不改 src/，低风险）
+- [x] 12.1 全部 task 完成后 commit `feat(driver): scaffold autonomous overnight bootstrap driver`
+- [x] 12.2 push 到本仓 main（脚本本身不接触 issue 队列、不改 src/，低风险）
 - [ ] 12.3 用户触发 `/opsx:archive autonomous-bootstrap-driver`
