@@ -221,3 +221,55 @@ input[disabled], select[disabled], textarea[disabled] { background: var(--bg-sof
 .mb-12 { margin-bottom: 12px; } .mb-24 { margin-bottom: 24px; }
 .mono { font-family: var(--mono); }
 hr { border: none; border-top: 1px solid var(--bd); margin: 16px 0; }
+
+/* dark theme variant + theme toggle button
+ * 由 data-theme="dark" 属性触发；初值由 <head> 内联脚本根据
+ * localStorage / prefers-color-scheme 决定，避免首屏闪烁。
+ */
+:root[data-theme="dark"] {
+  --fg: #e6edf3;
+  --fg-muted: #8b949e;
+  --bd: #30363d;
+  --bg: #0d1117;
+  --bg-soft: #161b22;
+  --accent: #4493f8;
+  --healthy: #3fb950;
+  --warning: #d29922;
+  --error: #f85149;
+}
+:root[data-theme="dark"] body { background: var(--bg); color: var(--fg); }
+:root[data-theme="dark"] tbody tr:hover { background: #1f2937; }
+:root[data-theme="dark"] tbody tr:nth-child(even) { background: #11161d; }
+:root[data-theme="dark"] .badge.running, :root[data-theme="dark"] .badge.healthy { background: rgba(63,185,80,0.18); color: #56d364; }
+:root[data-theme="dark"] .badge.stopped, :root[data-theme="dark"] .badge.draft { background: rgba(139,148,158,0.18); color: #c9d1d9; }
+:root[data-theme="dark"] .badge.errored, :root[data-theme="dark"] .badge.fail { background: rgba(248,81,73,0.20); color: #ff7b72; }
+:root[data-theme="dark"] .badge.starting, :root[data-theme="dark"] .badge.stopping, :root[data-theme="dark"] .badge.warning { background: rgba(210,153,34,0.20); color: #e3b341; }
+:root[data-theme="dark"] .badge.layer { background: rgba(68,147,248,0.20); color: #79c0ff; }
+:root[data-theme="dark"] .alert.error { background: rgba(248,81,73,0.12); border-left-color: #f85149; }
+:root[data-theme="dark"] .alert.warning { background: rgba(210,153,34,0.12); border-left-color: #d29922; }
+:root[data-theme="dark"] .alert.info { background: rgba(68,147,248,0.12); border-left-color: #4493f8; }
+:root[data-theme="dark"] .alert.success { background: rgba(63,185,80,0.12); border-left-color: #3fb950; }
+:root[data-theme="dark"] .btn.primary { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+:root[data-theme="dark"] .btn.primary:hover { background: #79c0ff; border-color: #79c0ff; }
+:root[data-theme="dark"] .btn.danger { color: #ff7b72; border-color: #ff7b72; }
+:root[data-theme="dark"] .btn.danger:hover { background: rgba(248,81,73,0.15); }
+:root[data-theme="dark"] input[disabled], :root[data-theme="dark"] select[disabled], :root[data-theme="dark"] textarea[disabled] { background: #11161d; }
+:root[data-theme="dark"] code { background: rgba(110,118,129,0.2); padding: 1px 4px; border-radius: 3px; }
+:root[data-theme="dark"] pre.log, :root[data-theme="dark"] textarea { background: #010409; color: #c9d1d9; border-color: var(--bd); }
+:root[data-theme="dark"] .chip { background: var(--bg-soft); }
+:root[data-theme="dark"] details { color: var(--fg); }
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--bd);
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--fg-muted);
+  font-family: inherit;
+  line-height: 1.4;
+  margin-left: auto;
+}
+.theme-toggle:hover { background: var(--bg-soft); color: var(--fg); border-color: var(--accent); }
+.topnav .env-badge { margin-left: 8px; }

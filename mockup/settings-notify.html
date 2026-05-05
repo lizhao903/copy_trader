@@ -7,6 +7,7 @@
 <!-- spec: openspec/specs/config-overlay/spec.md -->
 <!-- issue: lizhao903/copy_trader#29 -->
 <link rel="stylesheet" href="assets/style.css">
+<script>(function(){var t=localStorage.getItem("theme");if(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)t="dark";if(t==="dark")document.documentElement.setAttribute("data-theme","dark");})();</script>
 </head>
 <body>
 <div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
@@ -18,6 +19,7 @@
   <a href="doctor.html">自检</a>
   <a href="audit.html">审计</a>
   <a href="reconcile.html">对账</a>
+  <button class="theme-toggle" type="button" aria-label="切换深浅色" title="切换深浅色">🌙</button>
   <span class="env-badge">环境: dev</span>
 </nav>
 <main class="container">
@@ -147,6 +149,9 @@
 <script>
 document.addEventListener('submit', e => { e.preventDefault(); console.log('mockup submit:', Object.fromEntries(new FormData(e.target))); });
 document.querySelectorAll('button[data-action]').forEach(b => b.addEventListener('click', e => { console.log('mockup action:', e.currentTarget.dataset.action, e.currentTarget.dataset.target || ''); }));
+(function(){var root=document.documentElement;var btn=document.querySelector('.theme-toggle');if(!btn)return;
+var refresh=function(){btn.textContent=root.getAttribute('data-theme')==='dark'?'☀️':'🌙';};refresh();
+btn.addEventListener('click',function(){var next=root.getAttribute('data-theme')==='dark'?'light':'dark';if(next==='dark')root.setAttribute('data-theme','dark');else root.removeAttribute('data-theme');localStorage.setItem('theme',next);refresh();});})();
 </script>
 </body>
 </html>

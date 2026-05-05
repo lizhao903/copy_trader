@@ -18,6 +18,16 @@ xdg-open mockup/index.html
 
 无需任何依赖，离线可用。
 
+### 深浅色主题
+
+每个页面顶栏右侧有 🌙 / ☀️ 切换按钮。规则：
+
+- 首次访问：跟随操作系统 `prefers-color-scheme`（macOS 浅色 / 深色模式自动识别）
+- 点击切换：状态记到 `localStorage["theme"]`，下次访问保持
+- 防 FOUC：`<head>` 内联脚本在样式应用前就设 `data-theme`，没有"白闪"
+
+CSS 走单一文件，深色变体用 `:root[data-theme="dark"]` 覆盖 4 档调色板（fg / fg-muted / bd / accent / 状态色）；不引入第二份 stylesheet。
+
 ## 页面清单（→ spec → issue）
 
 | HTML 文件 | 对应路由 / 功能 | Spec | M4 Issue |
