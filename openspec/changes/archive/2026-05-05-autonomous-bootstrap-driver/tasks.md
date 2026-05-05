@@ -69,14 +69,12 @@
 
 ## 11. 启动决策（用户最后一步）
 
-- [ ] 11.1 全部 1–10 节通过后，driver 处于"安装好但未启动 cron"状态
-- [ ] 11.2 用户决定：
-  - 选项 A：执行 `bin/install_auto_dev_cron.sh install` 当晚生效
-  - 选项 B：保留 dry-run 工具，暂不启用 cron，等再过几天 review 流程
-- [ ] 11.3 启用后，第一次自动唤醒发生 ≤ 24h 内人工抽查首批 PR；若发现 driver 写错代码合 main → 立即 `bin/install_auto_dev_cron.sh pause` + 修复
+- [x] 11.1 全部 1–10 节通过后，driver 处于"安装好但未启动 cron"状态
+- [x] 11.2 用户决定：选项 B — 保留 dry-run 工具，暂不启用 cron，等再过几天 review 流程；启动 cron 推迟到用户后续显式触发 `bin/install_auto_dev_cron.sh install`
+- [x] 11.3 N/A — 选项 B 下未启用 cron；当用户后续切换到选项 A 时再执行 24h 抽查与 pause/修复流程
 
 ## 12. 提交与归档
 
 - [x] 12.1 全部 task 完成后 commit `feat(driver): scaffold autonomous overnight bootstrap driver`
 - [x] 12.2 push 到本仓 main（脚本本身不接触 issue 队列、不改 src/，低风险）
-- [ ] 12.3 用户触发 `/opsx:archive autonomous-bootstrap-driver`
+- [x] 12.3 用户触发 `/opsx:archive autonomous-bootstrap-driver`
