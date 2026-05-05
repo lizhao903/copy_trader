@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>copy_trader · Overview</title>
+<title>王牌带单员 · 总览</title>
 <!-- spec: openspec/specs/pnl-single-source/spec.md, openspec/specs/dashboard-mockup/spec.md -->
 <!-- issue: lizhao903/copy_trader#28 (M4 dashboard 基线) -->
 <!-- fixture: 4 accounts (spot/alt/copy/hl_eth) -->
@@ -12,19 +12,19 @@
 <body>
 <div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
 <nav class="topnav">
-  <a href="index.html" class="brand">copy_trader</a>
-  <a href="overview.html" class="active">Overview</a>
-  <a href="runners-list.html">Runners</a>
-  <a href="settings-index.html">Settings</a>
-  <a href="doctor.html">Doctor</a>
-  <a href="audit.html">Audit</a>
-  <a href="reconcile.html">Reconcile</a>
-  <span class="env-badge">env: dev</span>
+  <a href="index.html" class="brand">王牌带单员</a>
+  <a href="overview.html" class="active">总览</a>
+  <a href="runners-list.html">运行实例</a>
+  <a href="settings-index.html">设置</a>
+  <a href="doctor.html">自检</a>
+  <a href="audit.html">审计</a>
+  <a href="reconcile.html">对账</a>
+  <span class="env-badge">环境: dev</span>
 </nav>
 <main class="container">
   <div class="row between mb-12">
     <div>
-      <h1>Overview</h1>
+      <h1>总览</h1>
       <p class="subtitle">PnL 走 PnlEngine（账本→引擎→缓存）。所有数字均为占位 fixture。</p>
     </div>
     <div class="row">
@@ -64,12 +64,12 @@
   <h2>系统状态</h2>
   <div class="cards">
     <div class="card">
-      <span class="label">Runners</span>
+      <span class="label">运行实例</span>
       <div class="value">2 <span class="muted small">/ 4 active</span></div>
       <div class="delta"><span class="badge running">running 2</span> <span class="badge stopped">stopped 1</span> <span class="badge errored">errored 1</span></div>
     </div>
     <div class="card">
-      <span class="label">Reconcile</span>
+      <span class="label">对账</span>
       <div class="value">1 <span class="muted small">drift</span></div>
       <div class="delta">cache_drift 自动修正 · 无 SAFE 模式</div>
     </div>

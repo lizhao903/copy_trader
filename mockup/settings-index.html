@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>copy_trader · Settings</title>
+<title>王牌带单员 · 设置</title>
 <!-- spec: openspec/specs/config-overlay/spec.md -->
 <!-- issue: lizhao903/copy_trader#29 (Dashboard 设置中心) -->
 <link rel="stylesheet" href="assets/style.css">
@@ -11,17 +11,17 @@
 <body>
 <div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
 <nav class="topnav">
-  <a href="index.html" class="brand">copy_trader</a>
-  <a href="overview.html">Overview</a>
-  <a href="runners-list.html">Runners</a>
-  <a href="settings-index.html" class="active">Settings</a>
-  <a href="doctor.html">Doctor</a>
-  <a href="audit.html">Audit</a>
-  <a href="reconcile.html">Reconcile</a>
-  <span class="env-badge">env: dev</span>
+  <a href="index.html" class="brand">王牌带单员</a>
+  <a href="overview.html">总览</a>
+  <a href="runners-list.html">运行实例</a>
+  <a href="settings-index.html" class="active">设置</a>
+  <a href="doctor.html">自检</a>
+  <a href="audit.html">审计</a>
+  <a href="reconcile.html">对账</a>
+  <span class="env-badge">环境: dev</span>
 </nav>
 <main class="container">
-  <h1>Settings 设置中心</h1>
+  <h1>设置中心</h1>
   <p class="subtitle">所有配置统一入口。写 <span class="badge layer">local</span> 字段直接落 <code>$COPY_TRADER_HOME/config.yaml</code> 立即生效；写 <span class="badge layer">env</span>/<span class="badge layer">base</span> 字段触发 git workdir 改动 + draft PR；敏感字段不暴露原值。</p>
 
   <h2>Layer 状态摘要</h2>

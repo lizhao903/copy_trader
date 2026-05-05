@@ -1,6 +1,8 @@
 # mockup/
 
-`copy_trader` Dashboard 静态 HTML mockup 集合。**纯静态资源**，浏览器双击 `index.html` 即可离线浏览，不依赖任何外部 CDN / npm / build step。
+王牌带单员（`copy_trader`）Dashboard 静态 HTML mockup 集合。**纯静态资源**，浏览器双击 `index.html` 即可离线浏览，不依赖任何外部 CDN / npm / build step。
+
+> 系统对外名称为「**王牌带单员**」（mockup 顶栏 brand 与 `<title>` 中所示）；包名 / 仓库名 / env 变量前缀仍为 `copy_trader` / `COPY_TRADER_*`，是技术标识符不译。
 
 > ⚠️ 这些 mockup 仅作 UX 设计参考，**不进入运行时**。M4 后端实装（issue #28 / #29）合并后请按 `openspec/specs/dashboard-mockup/spec.md` 末条 requirement 决定保留 / 归档。
 

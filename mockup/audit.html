@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>copy_trader · Audit</title>
+<title>王牌带单员 · 审计</title>
 <!-- spec: openspec/specs/config-overlay/spec.md (Dashboard settings center performs layered writes) -->
 <!-- issue: lizhao903/copy_trader#29 -->
 <link rel="stylesheet" href="assets/style.css">
@@ -11,17 +11,17 @@
 <body>
 <div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
 <nav class="topnav">
-  <a href="index.html" class="brand">copy_trader</a>
-  <a href="overview.html">Overview</a>
-  <a href="runners-list.html">Runners</a>
-  <a href="settings-index.html">Settings</a>
-  <a href="doctor.html">Doctor</a>
-  <a href="audit.html" class="active">Audit</a>
-  <a href="reconcile.html">Reconcile</a>
-  <span class="env-badge">env: dev</span>
+  <a href="index.html" class="brand">王牌带单员</a>
+  <a href="overview.html">总览</a>
+  <a href="runners-list.html">运行实例</a>
+  <a href="settings-index.html">设置</a>
+  <a href="doctor.html">自检</a>
+  <a href="audit.html" class="active">审计</a>
+  <a href="reconcile.html">对账</a>
+  <span class="env-badge">环境: dev</span>
 </nav>
 <main class="container">
-  <h1>Dashboard Audit Log</h1>
+  <h1>设置中心审计日志</h1>
   <p class="subtitle">Dashboard 设置中心的所有写入动作。来源 <code>$COPY_TRADER_HOME/logs/dashboard_audit.log</code>。敏感字段值掩码为 <code>&lt;redacted&gt;</code>。</p>
 
   <div class="row mb-12">

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>copy_trader · Doctor</title>
+<title>王牌带单员 · 自检</title>
 <!-- spec: openspec/specs/runtime-isolation/spec.md, openspec/specs/config-overlay/spec.md -->
 <!-- issue: lizhao903/copy_trader#5 (CLI doctor) #28 (Dashboard 可视化) -->
 <link rel="stylesheet" href="assets/style.css">
@@ -11,19 +11,19 @@
 <body>
 <div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
 <nav class="topnav">
-  <a href="index.html" class="brand">copy_trader</a>
-  <a href="overview.html">Overview</a>
-  <a href="runners-list.html">Runners</a>
-  <a href="settings-index.html">Settings</a>
-  <a href="doctor.html" class="active">Doctor</a>
-  <a href="audit.html">Audit</a>
-  <a href="reconcile.html">Reconcile</a>
-  <span class="env-badge">env: dev</span>
+  <a href="index.html" class="brand">王牌带单员</a>
+  <a href="overview.html">总览</a>
+  <a href="runners-list.html">运行实例</a>
+  <a href="settings-index.html">设置</a>
+  <a href="doctor.html" class="active">自检</a>
+  <a href="audit.html">审计</a>
+  <a href="reconcile.html">对账</a>
+  <span class="env-badge">环境: dev</span>
 </nav>
 <main class="container">
   <div class="row between mb-12">
     <div>
-      <h1>Doctor <span class="badge healthy">healthy</span></h1>
+      <h1>自检 <span class="badge healthy">healthy</span></h1>
       <p class="subtitle">系统自检。CLI 等价：<code>copy-trader doctor</code> · 详细 schema 映射：<code>copy-trader doctor --schema</code></p>
     </div>
     <button class="btn" data-action="rerun">重新检查</button>
@@ -85,7 +85,7 @@
   </table>
 
   <h2>结论</h2>
-  <div class="alert success">所有自检通过。1 个 runner 处于 errored 状态，建议人工 reset 或在 <a href="runners-list.html">Runners</a> 页处理。</div>
+  <div class="alert success">所有自检通过。1 个 runner 处于 errored 状态，建议人工 reset 或在 <a href="runners-list.html">运行实例</a> 页处理。</div>
 
   <h3>其它检查</h3>
   <ul class="small muted" style="padding-left:24px;line-height:1.8">

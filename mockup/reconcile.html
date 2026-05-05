@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>copy_trader · Reconcile</title>
+<title>王牌带单员 · 对账</title>
 <!-- spec: openspec/specs/pnl-single-source/spec.md (Startup reconcile compares ledger, exchange, and cache) -->
 <!-- issue: lizhao903/copy_trader#11 (ReconcileService) #28 (Dashboard 视图) -->
 <link rel="stylesheet" href="assets/style.css">
@@ -11,19 +11,19 @@
 <body>
 <div class="mockup-banner">MOCKUP — 占位数据，非实盘</div>
 <nav class="topnav">
-  <a href="index.html" class="brand">copy_trader</a>
-  <a href="overview.html">Overview</a>
-  <a href="runners-list.html">Runners</a>
-  <a href="settings-index.html">Settings</a>
-  <a href="doctor.html">Doctor</a>
-  <a href="audit.html">Audit</a>
-  <a href="reconcile.html" class="active">Reconcile</a>
-  <span class="env-badge">env: dev</span>
+  <a href="index.html" class="brand">王牌带单员</a>
+  <a href="overview.html">总览</a>
+  <a href="runners-list.html">运行实例</a>
+  <a href="settings-index.html">设置</a>
+  <a href="doctor.html">自检</a>
+  <a href="audit.html">审计</a>
+  <a href="reconcile.html" class="active">对账</a>
+  <span class="env-badge">环境: dev</span>
 </nav>
 <main class="container">
   <div class="row between mb-12">
     <div>
-      <h1>Reconcile</h1>
+      <h1>对账</h1>
       <p class="subtitle">三方比对：ledger（账本，权威） · 交易所余额（真实仓位） · cache（<code>state/position_*.json</code>，可重建）。来源 <code>logs/reconcile_&lt;ts&gt;.log</code>。</p>
     </div>
     <div class="row">
