@@ -43,7 +43,7 @@
 
 ## 7. 提交与收尾
 
-- [ ] 7.1 `git add mockup/ && git commit -m "feat(mockup): add static HTML mockups for 16 management pages"`
-- [ ] 7.2 push 到本仓 main（无对外影响、低风险）
-- [ ] 7.3 在 GitHub issue #28（FastAPI Dashboard 基线）与 #29（设置中心）下各添加一条 comment 引用 mockup 文件路径，作为后端实装的 UX 来源
+- [x] 7.1 `git add mockup/ && git commit -m "feat(mockup): add static HTML mockups for 16 management pages"`
+- [x] 7.2 push 到本仓 main（无对外影响、低风险）
+- [x] 7.3 在 GitHub issue #28（FastAPI Dashboard 基线）与 #29（设置中心）下各添加一条 comment 引用 mockup 文件路径，作为后端实装的 UX 来源（issuecomment-4380859978 / issuecomment-4380860198）
 - [ ] 7.4 用户触发 `/opsx:archive dashboard-html-mockups`
