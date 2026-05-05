@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# autonomous-driver runtime（spec: openspec/specs/autonomous-driver/spec.md）
+var/
+logs/
+!logs/.gitkeep
