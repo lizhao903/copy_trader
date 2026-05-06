@@ -99,6 +99,7 @@ check_disk_space() {
   local pct_free
   pct_free=$(df -k "$REPO_ROOT" | awk 'NR==2 {gsub(/%/,"",$5); print 100-$5}')
   (( pct_free < 5 )) && halt "disk free < 5% ($pct_free%)"
+  return 0
 }
 check_main_ci() {
   local conclusion
