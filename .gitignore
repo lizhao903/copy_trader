@@ -233,3 +233,14 @@ logs/
 
 # macOS 杂物
 .DS_Store
+
+# 抵消用户全局 gitignore 中常见的 tests/ 排除（本仓库测试目录必须入库；
+# __pycache__ 等已在前面规则忽略，下面的负向规则只放行非缓存内容）
+!tests/
+!tests/**/*.py
+!tests/**/*.sh
+!tests/**/*.yaml
+!tests/**/*.yml
+!tests/**/*.json
+!tests/**/*.md
+!tests/**/conftest.py
