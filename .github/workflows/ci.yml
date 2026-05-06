@@ -1,0 +1,69 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  five-checks:
+    name: Five-checks gate (pytest / lint-imports / ruff / mypy / static-scan)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # uv 版本与 pyproject.toml [tool.uv].required-version (>=0.7,<0.8) 一致。
+      # 升级 uv minor 版本须走单独 PR (tooling-uv spec)。
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.7.x"
+          enable-cache: true
+
+      - name: uv sync --frozen
+        run: uv sync --frozen
+
+      - name: pytest (excluding live)
+        run: uv run pytest -q -m "not live"
+
+      # 注意：issue #2 (import-linter contracts) 合入前，没有 .importlinter
+      # 配置文件，此步骤会报 "Could not read any configuration." 并以 exit=1
+      # 退出。先用 continue-on-error 让 CI 链路通畅；issue #2 合入并落 contract
+      # 配置后，**必须**撤掉 continue-on-error，让 import-linter 成为强制门。
+      # TODO(issue#2): remove continue-on-error once .importlinter is committed.
+      - name: lint-imports (import-linter contracts)
+        continue-on-error: true
+        run: uv run lint-imports
+
+      - name: ruff check
+        run: uv run ruff check .
+
+      - name: ruff format --check
+        run: uv run ruff format --check .
+
+      - name: mypy (strict on src/copy_trader)
+        run: uv run mypy src/copy_trader
+
+      # 静态扫描 1：禁止 autotrader 风格的 `from script.x` 导入
+      # （参考 package-layout spec：误抄 autotrader 的 `from script.x` 导入被拦截）
+      - name: static-scan / forbid 'from script.' imports
+        run: |
+          set -euo pipefail
+          if grep -r 'from script\.' src/ tests/; then
+            echo "::error::Found 'from script.' import — autotrader-style legacy import is forbidden (see package-layout spec)."
+            exit 1
+          fi
+
+      # 静态扫描 2：禁止使用项目根 trade_info / logs / klines.db 等 autotrader
+      # 历史路径（参考 runtime-isolation spec：No production code path may
+      # reference legacy project-root state locations）
+      - name: static-scan / forbid legacy project-root state paths
+        run: |
+          set -euo pipefail
+          if grep -rE 'os\.path\.join\(ROOT, "(trade_info|logs|klines\.db)' src/ tests/; then
+            echo "::error::Found legacy project-root state path reference — runtime data must derive from \$COPY_TRADER_HOME (see runtime-isolation spec)."
+            exit 1
+          fi
