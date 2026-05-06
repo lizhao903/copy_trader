@@ -19,16 +19,24 @@ from copy_trader.runners.reconcile import (
     default_exchange_factory,
     run_reconcile,
 )
+from copy_trader.runners.service import (
+    HEARTBEAT_TIMEOUT_SECONDS,
+    InvalidStateTransition,
+    RunnerService,
+)
 from copy_trader.strategies import UnknownStrategyError
 
 __all__ = [
     "AccountNotFoundError",
     "BacktestRunResult",
     "BacktestRunner",
+    "HEARTBEAT_TIMEOUT_SECONDS",
+    "InvalidStateTransition",
     "LiveRunResult",
     "LiveRunner",
     "Mode",
     "ReconcileRunResult",
+    "RunnerService",
     "UnknownStrategyError",
     "build_ledger",
     "default_exchange_factory",
