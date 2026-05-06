@@ -1,0 +1,86 @@
+# copy-trader systemd template unit (issue #31)
+#
+# 实例命名: copy-trader@<strategy>-<account>
+#   例如:   copy-trader@hello-spot.service
+#
+# 实例化时 %i 会被替换成 "<strategy>-<account>";本模板用 ExecStartPre 解析
+# 把 %i 拆成两段后传给 copy-trader run --strategy <s> --account <a>。
+#
+# spec: openspec/specs/delivery-roadmap/spec.md + runtime-isolation/spec.md
+#
+# 安装到 /etc/systemd/system/copy-trader@.service 后:
+#
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable  copy-trader@hello-spot
+#   sudo systemctl start   copy-trader@hello-spot
+#   sudo journalctl -u     copy-trader@hello-spot -f
+
+[Unit]
+Description=copy-trader runner (%i)
+Documentation=https://github.com/lizhao903/copy_trader/blob/main/docs/PRODUCTION_ONBOARD.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=copy_trader
+Group=copy_trader
+
+# 运行环境;COPY_TRADER_ENV 钉死 prod,COPY_TRADER_HOME 走 spec runtime-isolation
+# 默认 /var/lib/copy_trader (issue #3 实装)。
+Environment=COPY_TRADER_ENV=prod
+Environment=COPY_TRADER_HOME=/var/lib/copy_trader
+
+# 凭证 / 私钥**仅**通过 EnvironmentFile 注入（不在 unit 文件明文写）。
+# secrets.env 文件权限必须 0600 + owner=copy_trader。
+EnvironmentFile=/etc/copy_trader/secrets.env
+
+# %i = <strategy>-<account>;ExecStartPre 校验文件 + 解析,ExecStart 启动主循环。
+# %i 拆解依赖 bin/systemd_split_instance.sh (issue #30 实装) 或行内 shell。
+WorkingDirectory=/var/lib/copy_trader
+ExecStartPre=/usr/local/bin/copy-trader doctor
+ExecStart=/bin/bash -c '\
+    instance="%i" ; \
+    strategy="${instance%%-*}" ; \
+    account="${instance#*-}" ; \
+    if [ -z "$strategy" ] || [ -z "$account" ] || [ "$strategy" = "$account" ]; then \
+        echo "instance %i must be <strategy>-<account>" >&2 ; exit 64 ; \
+    fi ; \
+    exec /usr/local/bin/copy-trader run --strategy "$strategy" --account "$account" --mode live \
+'
+
+# 失败 → 60s 后重启;3 次连失败 → 进入 failure 状态等运维介入(StartLimitIntervalSec/Burst)
+Restart=on-failure
+RestartSec=60s
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+# 优雅退出: SIGTERM 给 LiveRunner 30s 把当前 tick 收尾再硬停
+KillSignal=SIGTERM
+TimeoutStopSec=30s
+
+# 安全 hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/copy_trader /var/log/copy_trader
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+# 日志走 journal;Dashboard 后续可读 /var/log/copy_trader/runner.log 由 LiveRunner 自身写
+StandardOutput=journal
+StandardError=journal
+
+# OnFailure: 触发 alert hook (issue #35 灰度指标采集)
+# OnFailure=copy-trader-alert@%i.service  # 待 m5 #30 实装 alert service
+
+[Install]
+WantedBy=multi-user.target
