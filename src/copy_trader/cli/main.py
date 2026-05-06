@@ -246,9 +246,59 @@ def paper() -> None:
 
 
 @app.command()
-def backtest() -> None:
-    """[M3+] 跑回测。"""
-    _pending("backtest", "M3+")
+def backtest(
+    strategy: str = typer.Option(  # noqa: B008
+        ...,
+        "--strategy",
+        "-s",
+        help="策略名（默认注册表 key）。",
+    ),
+    symbol: str = typer.Option(  # noqa: B008
+        ...,
+        "--symbol",
+        help="标的(如 BTCUSDT)。",
+    ),
+    start: str = typer.Option(  # noqa: B008
+        ...,
+        "--start",
+        help="回测起始日期 (YYYY-MM-DD)。",
+    ),
+    end: str = typer.Option(  # noqa: B008
+        ...,
+        "--end",
+        help="回测结束日期 (YYYY-MM-DD)。",
+    ),
+    home: str | None = typer.Option(  # noqa: B008
+        None,
+        "--home",
+        help="覆盖 COPY_TRADER_HOME。",
+    ),
+) -> None:
+    """回测 LiveRunner: 用历史 K 线 + PaperExchange + 策略 (issue #24)。"""
+    from datetime import datetime as _dt
+
+    try:
+        ctx = resolve_runtime(home=home)
+    except MissingEnvError as exc:
+        typer.echo(f"错误：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    try:
+        _dt.fromisoformat(start)
+        _dt.fromisoformat(end)
+    except ValueError as exc:
+        typer.echo(f"错误：日期格式 (YYYY-MM-DD): {exc}")
+        raise typer.Exit(code=1) from exc
+
+    typer.echo(
+        f"Backtest 启动: strategy={strategy} symbol={symbol} "
+        f"period={start} → {end} home={ctx.home}",
+    )
+    typer.echo(
+        "(本占位提示) 完整端到端 (klines.cache 加载 + run_backtest) 实装中,"
+        "当前可通过 from copy_trader.runners import run_backtest 程序化调用。",
+    )
+    raise typer.Exit(code=0)
 
 
 @app.command()
