@@ -29,13 +29,7 @@ jobs:
       - name: pytest (excluding live)
         run: uv run pytest -q -m "not live"
 
-      # 注意：issue #2 (import-linter contracts) 合入前，没有 .importlinter
-      # 配置文件，此步骤会报 "Could not read any configuration." 并以 exit=1
-      # 退出。先用 continue-on-error 让 CI 链路通畅；issue #2 合入并落 contract
-      # 配置后，**必须**撤掉 continue-on-error，让 import-linter 成为强制门。
-      # TODO(issue#2): remove continue-on-error once .importlinter is committed.
       - name: lint-imports (import-linter contracts)
-        continue-on-error: true
         run: uv run lint-imports
 
       - name: ruff check
