@@ -21,6 +21,11 @@
 
 set -euo pipefail
 
+# claude -p 子进程优先吃 ANTHROPIC_API_KEY；用户当前以 claude.ai 订阅
+# 通过 keyring OAuth 鉴权，env 里残留的旧 key 会 401 阻断 subagent。
+# 显式 unset 让 subagent 回落到 keyring。需要走 API key 时改回这里。
+unset ANTHROPIC_API_KEY
+
 # === Config ===
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STATE_DIR="$REPO_ROOT/var/dev/state"
