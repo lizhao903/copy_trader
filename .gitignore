@@ -221,3 +221,15 @@ __marimo__/
 var/
 logs/
 !logs/.gitkeep
+
+# IDE / harness skill mirrors（OpenSpec 各 harness 自行装；不入库）
+.claude/
+.codex/
+.cursor/
+.gemini/
+.qoder/
+.qwen/
+.trae/
+
+# macOS 杂物
+.DS_Store

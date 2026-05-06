@@ -26,7 +26,7 @@ Key rules when authoring artifacts:
 - Always read completed dependency artifacts before generating a new one.
 - Re-run `openspec status --change "<name>" --json` after each artifact to confirm `applyRequires` items are `done`.
 
-The same skill definitions are mirrored across `.claude/`, `.cursor/`, `.codex/`, `.gemini/`, `.qoder/`, `.qwen/`, `.trae/` so the workflow works in any of those harnesses — keep them in sync if you edit one.
+OpenSpec 在每个 harness 自带的 skill 安装路径里下发同名 skill；这些 IDE 镜像目录（`.claude/`、`.cursor/`、`.codex/`、`.gemini/`、`.qoder/`、`.qwen/`、`.trae/`）已加入 `.gitignore`，**不入库**。需要在新 harness 启用时各自走 OpenSpec 安装即可，无需跨 harness 同步本地副本。
 
 ## When there is no spec yet
 
