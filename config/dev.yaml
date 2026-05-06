@@ -1,0 +1,20 @@
+# config/dev.yaml — 开发环境覆盖。
+# 仅写与 base.yaml 不同的字段；其余继承 base。
+# 严禁出现敏感字段（*_KEY / *_SECRET / *_TOKEN / *_PRIVATE_KEY）。
+
+accounts:
+  spot:
+    enabled: true
+    symbols:
+      - BTCUSDT
+  perp:
+    enabled: false
+    symbols:
+      - BTCUSDT
+
+capital_allocation:
+  - account: spot
+    strategy: dca
+    quote_asset: USDT
+    max_quote_amount: "100"
+    reserve_quote_amount: "20"

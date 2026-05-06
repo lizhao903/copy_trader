@@ -1,0 +1,48 @@
+# config/base.yaml — 与环境无关的默认值。
+#
+# 业务 4 段配置入口；env-specific 仅在 dev/paper/prod.yaml 覆盖差异。
+# 严禁在此文件出现 *_KEY / *_SECRET / *_TOKEN / *_PRIVATE_KEY 命名字段；
+# 凭证一律走 $COPY_TRADER_HOME/secrets/.env 注入到环境变量。
+
+accounts:
+  spot:
+    venue: binance_spot
+    enabled: true
+    credentials_alias: BINANCE_SPOT
+    symbols:
+      - BTCUSDT
+      - ETHUSDT
+  perp:
+    venue: binance_um
+    enabled: false
+    credentials_alias: BINANCE_UM
+    symbols:
+      - BTCUSDT
+
+capital_allocation:
+  - account: spot
+    strategy: dca
+    quote_asset: USDT
+    max_quote_amount: "1000"
+    reserve_quote_amount: "200"
+  - account: perp
+    strategy: kdj_short_1h3m
+    quote_asset: USDT
+    max_quote_amount: "500"
+    reserve_quote_amount: "100"
+
+pyramid:
+  - account: spot
+    strategy: dca
+    enabled: true
+    first_entry_fraction: "0.25"
+    add_trigger_pct: "1.5"
+    reserve_quote_usdt: "200"
+    max_rounds: 4
+
+fixed_position:
+  - account: perp
+    strategy: kdj_short_1h3m
+    mode: fixed_quote
+    quote_amount: "100"
+    max_price: "200000"
