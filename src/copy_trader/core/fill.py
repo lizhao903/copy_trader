@@ -35,3 +35,6 @@ class Fill(BaseModel):
     env_tag: str
     machine_id: str
     schema_version: int
+    # issue #25 加: runner_id 把 fill 归属于具体 RunnerInstance.
+    # 默认 "legacy" 兼容 schema v2 旧行 (TradesRepo 迁移时给 NULL→"legacy")。
+    runner_id: str = "legacy"

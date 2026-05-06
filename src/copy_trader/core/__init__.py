@@ -5,6 +5,7 @@ from copy_trader.core.money import CurrencyMismatchError, Money
 from copy_trader.core.order import Order, OrderRequest, OrderSide, OrderStatus, OrderType
 from copy_trader.core.pnl import PnlBreakdown
 from copy_trader.core.position import Position
+from copy_trader.core.runner_instance import RunnerInstance, RunnerMode, RunnerStatus
 from copy_trader.core.symbol import SymbolInfo
 
 __all__ = [
@@ -19,5 +20,8 @@ __all__ = [
     "OrderType",
     "PnlBreakdown",
     "Position",
+    "RunnerInstance",
+    "RunnerMode",
+    "RunnerStatus",
     "SymbolInfo",
 ]

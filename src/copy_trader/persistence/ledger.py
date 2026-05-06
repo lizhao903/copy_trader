@@ -24,7 +24,9 @@ from copy_trader.core import Fill
 __all__ = ["CrossEnvironmentWriteError", "TradesRepo"]
 
 #: spec 当前版本；写表时通过 `PRAGMA user_version = SCHEMA_VERSION` 写入 SQLite header
-SCHEMA_VERSION = 2
+#: v3 (issue #25): 加 runner_id 列, NOT NULL DEFAULT 'legacy'。已有 v2 库通过
+#: `_migrate_v2_to_v3` ALTER TABLE 升级。
+SCHEMA_VERSION = 3
 
 _CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS trades (
@@ -41,7 +43,8 @@ CREATE TABLE IF NOT EXISTS trades (
     exchange_order_id TEXT NOT NULL,
     env_tag TEXT NOT NULL,
     machine_id TEXT NOT NULL,
-    schema_version INTEGER NOT NULL
+    schema_version INTEGER NOT NULL,
+    runner_id TEXT NOT NULL DEFAULT 'legacy'
 )
 """
 
@@ -84,14 +87,28 @@ class TradesRepo:
     # --- schema --------------------------------------------------------
 
     def _ensure_schema(self) -> None:
-        """幂等建表：CREATE TABLE IF NOT EXISTS + 索引 + 写 user_version。"""
+        """幂等建表 + v2→v3 迁移 (加 runner_id 列)。"""
         cur = self._conn.cursor()
         cur.execute(_CREATE_TABLE_SQL)
         cur.execute(_CREATE_INDEX_ACCOUNT_SYMBOL_TS_SQL)
         cur.execute(_CREATE_INDEX_ACCOUNT_SCHEMA_SQL)
+        # 检测已有库的 user_version；若 < 3 走 ALTER TABLE 加 runner_id 列。
+        # 新建库由 _CREATE_TABLE_SQL 已含 runner_id 列,直接跳。
+        cur.execute("PRAGMA user_version")
+        row = cur.fetchone()
+        current = int(row[0]) if row else 0
+        if current < 3:
+            self._migrate_v2_to_v3(cur)
         # PRAGMA user_version 不接受参数化绑定，需要内联整型字面量；这里值是常量、安全。
         cur.execute(f"PRAGMA user_version = {int(SCHEMA_VERSION)}")
         self._conn.commit()
+
+    def _migrate_v2_to_v3(self, cur: sqlite3.Cursor) -> None:
+        """已有 v2 库加 runner_id 列。新建库不会进入 (CREATE TABLE 已含此列)。"""
+        cur.execute("PRAGMA table_info(trades)")
+        cols = {row[1] for row in cur.fetchall()}
+        if "runner_id" not in cols:
+            cur.execute("ALTER TABLE trades ADD COLUMN runner_id TEXT NOT NULL DEFAULT 'legacy'")
 
     @property
     def schema_version(self) -> int:
@@ -118,8 +135,8 @@ class TradesRepo:
             """
             INSERT INTO trades (
                 id, ts, account, symbol, side, qty, price, fee, fee_asset,
-                exchange_order_id, env_tag, machine_id, schema_version
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                exchange_order_id, env_tag, machine_id, schema_version, runner_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 fill.id,
@@ -135,6 +152,7 @@ class TradesRepo:
                 fill.env_tag,
                 fill.machine_id,
                 int(fill.schema_version),
+                fill.runner_id,
             ),
         )
         self._conn.commit()
@@ -180,7 +198,7 @@ class TradesRepo:
             cur.execute(
                 """
                 SELECT id, ts, account, symbol, side, qty, price, fee, fee_asset,
-                       exchange_order_id, env_tag, machine_id, schema_version
+                       exchange_order_id, env_tag, machine_id, schema_version, runner_id
                 FROM trades
                 WHERE account = ? AND symbol = ?
                 ORDER BY ts ASC, row_id ASC
@@ -191,7 +209,7 @@ class TradesRepo:
             cur.execute(
                 """
                 SELECT id, ts, account, symbol, side, qty, price, fee, fee_asset,
-                       exchange_order_id, env_tag, machine_id, schema_version
+                       exchange_order_id, env_tag, machine_id, schema_version, runner_id
                 FROM trades
                 WHERE account = ? AND symbol = ? AND ts >= ?
                 ORDER BY ts ASC, row_id ASC
@@ -203,6 +221,11 @@ class TradesRepo:
 
     @staticmethod
     def _row_to_fill(row: sqlite3.Row) -> Fill:
+        # row["runner_id"] 在 v2 迁移到 v3 后默认 'legacy'
+        try:
+            runner_id = row["runner_id"]
+        except (KeyError, IndexError):
+            runner_id = "legacy"
         return Fill(
             id=row["id"],
             ts=datetime.fromisoformat(row["ts"]),
@@ -217,6 +240,7 @@ class TradesRepo:
             env_tag=row["env_tag"],
             machine_id=row["machine_id"],
             schema_version=int(row["schema_version"]),
+            runner_id=runner_id,
         )
 
     # --- lifecycle -----------------------------------------------------
