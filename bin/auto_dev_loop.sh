@@ -218,15 +218,25 @@ prepare_branch() {
 }
 render_prompt() {
   local n="$1" title="$2" body="$3" branch="$4"
-  local out
+  local out body_file
   out=$(cat "$PROMPT_TEMPLATE")
   out="${out//\{\{ISSUE_NUMBER\}\}/$n}"
   out="${out//\{\{ISSUE_TITLE\}\}/$title}"
   out="${out//\{\{FEATURE_BRANCH\}\}/$branch}"
   out="${out//\{\{TIMEBOX_MIN\}\}/$TIMEBOX_MIN}"
   out="${out//\{\{LOCAL_CHECK_COMMANDS\}\}/$LOCAL_CHECK_CMDS}"
-  # multi-line body via awk
-  echo "$out" | awk -v body="$body" '/{{ISSUE_BODY}}/ { print body; next } { print }'
+  # multi-line body via temp file（BSD awk 不接受 -v 变量值含换行）
+  body_file=$(mktemp)
+  printf '%s' "$body" > "$body_file"
+  printf '%s\n' "$out" | awk -v body_file="$body_file" '
+    /\{\{ISSUE_BODY\}\}/ {
+      while ((getline line < body_file) > 0) print line
+      close(body_file)
+      next
+    }
+    { print }
+  '
+  rm -f "$body_file"
 }
 dispatch_subagent() {
   local n="$1" branch="$2" prompt_file="$3"
