@@ -414,9 +414,20 @@ def reconcile(
 
 
 @app.command()
-def dashboard() -> None:
-    """[M4] 启动 dashboard（含设置中心）。"""
-    _pending("dashboard", "M4")
+def dashboard(
+    port: int = typer.Option(15000, "--port"),  # noqa: B008
+    host: str = typer.Option("127.0.0.1", "--host"),  # noqa: B008
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """启动 FastAPI Dashboard (issue #28)。"""
+    import uvicorn
+
+    from copy_trader.cli.dashboard import build_app
+
+    ctx = resolve_runtime(home=home)
+    fastapi_app = build_app(ctx.home)
+    typer.echo(f"Dashboard 启动: http://{host}:{port}/overview")
+    uvicorn.run(fastapi_app, host=host, port=port, log_level="info")
 
 
 # --------------------------------------------------------------------------- #

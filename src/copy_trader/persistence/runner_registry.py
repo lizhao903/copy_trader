@@ -75,7 +75,9 @@ class RunnerRegistry:
     def __init__(self, db_path: Path) -> None:
         self._db_path = db_path
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(db_path))
+        # check_same_thread=False 让 FastAPI / asyncio 等多线程场景能用同一连接;
+        # 单进程内调用方负责自己同步 (RunnerService 不并发改同一行)。
+        self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._ensure_schema()
 
