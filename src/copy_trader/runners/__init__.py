@@ -1,5 +1,10 @@
 """Runner 层：把 strategies / execution / marketdata 装配成长进程并管控生命周期。"""
 
+from copy_trader.persistence import (
+    DuplicateRunnerNameError,
+    RunnerNotFoundError,
+    RunnerRegistry,
+)
 from copy_trader.runners.backtest import (
     BacktestRunner,
     BacktestRunResult,
@@ -30,12 +35,15 @@ __all__ = [
     "AccountNotFoundError",
     "BacktestRunResult",
     "BacktestRunner",
+    "DuplicateRunnerNameError",
     "HEARTBEAT_TIMEOUT_SECONDS",
     "InvalidStateTransition",
     "LiveRunResult",
     "LiveRunner",
     "Mode",
     "ReconcileRunResult",
+    "RunnerNotFoundError",
+    "RunnerRegistry",
     "RunnerService",
     "UnknownStrategyError",
     "build_ledger",
