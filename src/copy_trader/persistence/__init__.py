@@ -5,9 +5,17 @@ from copy_trader.persistence.ledger import (
     CrossEnvironmentWriteError,
     TradesRepo,
 )
+from copy_trader.persistence.runner_registry import (
+    DuplicateRunnerNameError,
+    RunnerNotFoundError,
+    RunnerRegistry,
+)
 
 __all__ = [
     "SCHEMA_VERSION",
     "CrossEnvironmentWriteError",
+    "DuplicateRunnerNameError",
+    "RunnerNotFoundError",
+    "RunnerRegistry",
     "TradesRepo",
 ]
