@@ -248,9 +248,7 @@ class ReconcileService:
                 events.append(cache_event)
 
             # 2. ledger ↔ exchange 比对。
-            mismatch_event = self._reconcile_ledger_vs_exchange(
-                account, symbol, ledger_position
-            )
+            mismatch_event = self._reconcile_ledger_vs_exchange(account, symbol, ledger_position)
             if mismatch_event is not None:
                 events.append(mismatch_event)
                 safe_mode = True
