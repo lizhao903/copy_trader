@@ -8,6 +8,37 @@ This is a greenfield repo for a **copy-trade system** (`copy_trader`). At the ti
 
 When the user asks you to start building, expect to bootstrap the project structure (package layout, dependency manager, test runner) as the first concrete change.
 
+## Onboard 与运行时根目录
+
+新机器从 zero 到能跑起来三步（详见 README.md「Onboard 三件套」段）：
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync --frozen
+COPY_TRADER_ENV=dev uv run copy-trader doctor
+```
+
+**两个核心环境变量**（spec: `openspec/specs/runtime-isolation/spec.md`）：
+
+- `COPY_TRADER_ENV`：必填，取值 `dev | paper | prod`。缺失 → 进程在加载任何业务模块前 fail-fast 退出。
+- `COPY_TRADER_HOME`：可选，覆盖运行时根目录；不设时按 env 取默认值。解析优先级：CLI `--home` > 环境变量 > 默认值。
+
+**运行时根目录默认值**（issue #3 实装）：
+
+| `COPY_TRADER_ENV` | `COPY_TRADER_HOME` 默认                 |
+| ----------------- | --------------------------------------- |
+| `dev`             | `./var/dev/`（相对当前 CWD）            |
+| `paper`           | `./var/paper/`（相对当前 CWD）          |
+| `prod`            | `/var/lib/copy_trader/`（绝对路径）     |
+
+> dev / paper 默认相对 CWD 是为了让本机多 worktree / 多分支并行开发互不污染；prod 走绝对路径是为了 systemd / launchd 启动时不依赖 shell CWD。
+
+固定 5 个子目录：`state/`（lock + machine_id + driver state）、`logs/`、`pids/`、`db/`（SQLite ledger）、`secrets/`（API key / token；命名以 `_KEY / _SECRET / _TOKEN / _PRIVATE_KEY` 结尾，禁止入库）。缺失时启动期以 `0700` 自动创建。
+
+**运行时锁文件**（`state/.runtime_lock.json`）记录 `{env_tag, machine_id, schema_version, pid, started_at}`；env_tag 或 machine_id 不一致 → 进程拒绝启动。`doctor` 子命令例外：锁不一致时不 fail-fast，而是把不一致项作为告警打印（runtime-isolation spec 第 4 个 Requirement）。
+
+**与历史参考仓库的边界**：本仓 production code（`src/` 与 `tests/`）禁止引用早期参考仓库形态的历史路径（如 `trade_info/`、仓库根 `logs/`、`klines.db`、写死的项目根绝对路径等）。issue #6 的 CI 静态扫描会在 PR 引入这类引用时拦截合并；具体黑名单在 `.github/workflows/` 中维护。同理，写代码时不要假设仓库 clone 在某个固定绝对路径下——所有可变运行时数据都从 `$COPY_TRADER_HOME` 派生。
+
 ## Working through OpenSpec
 
 All non-trivial work in this repo is meant to flow through the **OpenSpec spec-driven workflow** before code is written. The `openspec` CLI must be on PATH; `openspec/config.yaml` declares `schema: spec-driven`.
