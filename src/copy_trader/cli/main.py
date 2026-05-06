@@ -45,9 +45,13 @@ from copy_trader.config.runtime import (
 )
 from copy_trader.runners import (
     AccountNotFoundError,
+    LiveRunResult,
     ReconcileRunResult,
+    UnknownStrategyError,
     build_ledger,
     default_exchange_factory,
+    default_marketdata_factory,
+    run_live,
     run_reconcile,
 )
 
@@ -85,9 +89,154 @@ def _pending(name: str, milestone: str) -> None:
 
 
 @app.command()
-def run() -> None:
-    """[M1+] 启动主交易循环（live 形态）。"""
-    _pending("run", "M1+")
+def run(
+    strategy: str = typer.Option(  # noqa: B008
+        ...,
+        "--strategy",
+        "-s",
+        help="策略名（默认注册表 key，如 'hello'）。",
+    ),
+    account: str = typer.Option(  # noqa: B008
+        ...,
+        "--account",
+        "-a",
+        help="目标账户（必须存在于 config.accounts）。",
+    ),
+    mode: str = typer.Option(  # noqa: B008
+        "dry-run",
+        "--mode",
+        "-m",
+        help="运行模式：live / paper / dry-run（默认 dry-run，不触达 exchange）。",
+    ),
+    max_iterations: int | None = typer.Option(  # noqa: B008
+        None,
+        "--max-iterations",
+        help="主循环最大轮数；缺省无限。CI / smoke 设小值（如 3）快速退出。",
+    ),
+    tick_seconds: float = typer.Option(  # noqa: B008
+        60.0,
+        "--tick-seconds",
+        help="每轮间 sleep 秒数；测试可设 0。",
+    ),
+    home: str | None = typer.Option(  # noqa: B008
+        None,
+        "--home",
+        help="覆盖 COPY_TRADER_HOME，便于隔离目录跑。",
+    ),
+    config_dir: Path | None = typer.Option(  # noqa: B008
+        None,
+        "--config-dir",
+        help="config/ 目录路径；缺省自动探测。",
+    ),
+) -> None:
+    """启动 LiveRunner 主循环（issue #19）。
+
+    模式：
+
+    - ``live``：调用真实 exchange.place_order，把 fills 写 ledger。
+    - ``paper``：用 PaperExchange 包 wraps，env_tag='paper' 写 ledger。
+    - ``dry-run``：策略产生 OrderRequest 但**不**触达 exchange / ledger。
+
+    退出码：
+    - 0：循环正常结束（``--max-iterations`` 用尽）+ 无 errors
+    - 1：参数错误 / 配置错误 / 循环中累计错误 > 0
+    """
+    if mode not in ("live", "paper", "dry-run"):
+        typer.echo(f"错误：--mode 必须是 live / paper / dry-run，收到 {mode!r}")
+        raise typer.Exit(code=1)
+
+    try:
+        ctx = resolve_runtime(home=home)
+    except MissingEnvError as exc:
+        typer.echo(f"错误：{exc}")
+        raise typer.Exit(code=1) from exc
+    except RuntimeBootstrapError as exc:
+        typer.echo(f"runtime bootstrap 失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    cfg_path = config_dir or _autodetect_config_dir()
+    if cfg_path is None or not cfg_path.is_dir():
+        typer.echo(f"错误：未找到 config/ 目录（looked at {cfg_path}）。")
+        raise typer.Exit(code=1)
+
+    try:
+        settings = Settings.load(
+            config_dir=cfg_path,
+            env=ctx.env_tag,
+            local_path=(ctx.home / "config.yaml") if (ctx.home / "config.yaml").is_file() else None,
+        )
+    except (ValidationError, OSError, ValueError) as exc:
+        typer.echo(f"settings 加载失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    if account not in settings.accounts:
+        sorted_avail = sorted(settings.accounts.keys())
+        typer.echo(f"错误：account {account!r} 不在配置里；可选账户：{sorted_avail}")
+        raise typer.Exit(code=1)
+
+    venue = settings.accounts[account].venue
+    try:
+        exchange = default_exchange_factory(venue)
+    except KeyError as exc:
+        typer.echo(f"错误：venue 未注册：{exc}")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # noqa: BLE001
+        typer.echo(f"错误：交易所适配器初始化失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    try:
+        marketdata = default_marketdata_factory(venue)
+    except KeyError as exc:
+        typer.echo(f"错误：marketdata 未注册：{exc}")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # noqa: BLE001
+        typer.echo(f"错误：marketdata 初始化失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    ledger = build_ledger(home=ctx.home, env_tag=ctx.env_tag, machine_id=ctx.machine_id)
+
+    def _on_order(req: object, order: object | None) -> None:
+        if mode == "dry-run":
+            typer.echo(f"[dry-run] 策略产出 {req}（未下单）")
+        else:
+            typer.echo(f"[{mode}] 已下单 {order}")
+
+    typer.echo(
+        f"LiveRunner 启动：strategy={strategy} account={account} mode={mode} "
+        f"max_iterations={max_iterations} tick_seconds={tick_seconds}",
+    )
+    try:
+        result: LiveRunResult = run_live(
+            account=account,
+            strategy_name=strategy,
+            mode=mode,  # type: ignore[arg-type]
+            settings=settings,
+            ledger=ledger,
+            exchange=exchange,
+            marketdata=marketdata,
+            max_iterations=max_iterations,
+            tick_seconds=tick_seconds,
+            on_order=_on_order,
+        )
+    except UnknownStrategyError as exc:
+        typer.echo(f"错误：策略未注册：{exc}")
+        raise typer.Exit(code=1) from exc
+    except KeyboardInterrupt:
+        typer.echo("（收到 Ctrl-C，提前退出）")
+        raise typer.Exit(code=0) from None
+    finally:
+        _safe_close(ledger)
+
+    typer.echo(
+        f"LiveRunner 结束：iterations={result.iterations} "
+        f"orders_proposed={result.orders_proposed} orders_executed={result.orders_executed} "
+        f"fills_written={result.fills_written} errors={len(result.errors)}",
+    )
+    if result.errors:
+        for err in result.errors:
+            typer.echo(f"  ! {err}")
+        raise typer.Exit(code=1)
+    raise typer.Exit(code=0)
 
 
 @app.command()
