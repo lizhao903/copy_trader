@@ -8,9 +8,11 @@ contract 强制）。
 
 from copy_trader.marketdata.base import Kline, KlineSource
 from copy_trader.marketdata.binance import BinanceMarketdata
+from copy_trader.marketdata.hyperliquid import HyperliquidMarketdata
 
 __all__ = [
     "BinanceMarketdata",
+    "HyperliquidMarketdata",
     "Kline",
     "KlineSource",
 ]
