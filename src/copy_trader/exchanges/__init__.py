@@ -7,6 +7,7 @@
 """
 
 from copy_trader.exchanges.base import Exchange
+from copy_trader.exchanges.paper import PAPER_ENV_TAG, PaperExchange
 from copy_trader.exchanges.registry import (
     DuplicateExchangeError,
     ExchangeFactory,
@@ -19,11 +20,13 @@ from copy_trader.exchanges.registry import (
 )
 
 __all__ = [
+    "PAPER_ENV_TAG",
     "DuplicateExchangeError",
     "Exchange",
     "ExchangeFactory",
     "ExchangeRegistry",
     "InvalidExchangeNameError",
+    "PaperExchange",
     "UnknownExchangeError",
     "get_default",
     "list_default",
