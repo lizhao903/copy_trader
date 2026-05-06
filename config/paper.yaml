@@ -1,0 +1,15 @@
+# config/paper.yaml — paper trading 环境覆盖。
+# 模拟撮合，资金额度可适当放大用于策略压测。
+# 严禁出现敏感字段（*_KEY / *_SECRET / *_TOKEN / *_PRIVATE_KEY）。
+
+accounts:
+  spot:
+    enabled: true
+    credentials_alias: BINANCE_SPOT_PAPER
+
+capital_allocation:
+  - account: spot
+    strategy: dca
+    quote_asset: USDT
+    max_quote_amount: "5000"
+    reserve_quote_amount: "1000"

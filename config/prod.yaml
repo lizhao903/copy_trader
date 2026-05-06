@@ -1,0 +1,23 @@
+# config/prod.yaml — 生产环境覆盖。
+# 凭证 MUST 通过 secrets/.env 注入；本文件 MUST NOT 出现任何敏感字段。
+# 任何对本文件的修改 MUST 通过 PR + review，不允许生产机直接编辑。
+
+accounts:
+  spot:
+    enabled: true
+    credentials_alias: BINANCE_SPOT_PROD
+  perp:
+    enabled: true
+    credentials_alias: BINANCE_UM_PROD
+
+capital_allocation:
+  - account: spot
+    strategy: dca
+    quote_asset: USDT
+    max_quote_amount: "10000"
+    reserve_quote_amount: "2000"
+  - account: perp
+    strategy: kdj_short_1h3m
+    quote_asset: USDT
+    max_quote_amount: "5000"
+    reserve_quote_amount: "1000"
