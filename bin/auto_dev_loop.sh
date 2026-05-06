@@ -53,7 +53,7 @@ mkdir -p "$STATE_DIR" "$LOG_DIR"
 
 # === Logging ===
 log() {
-  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" | tee -a "$WAKE_LOG"
+  echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" | tee -a "$WAKE_LOG" >&2
 }
 log_cron() { echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >> "$CRON_LOG"; }
 die() { log "FATAL: $*"; log_cron "FATAL: $*"; exit 1; }
