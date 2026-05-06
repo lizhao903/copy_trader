@@ -39,6 +39,10 @@ __all__ = [
 
 _REGISTRY_SCHEMA_VERSION: Final[int] = 1
 
+# sentinel: 区分 "不传" 和 "传 None"。`update(pid=None)` 想表达"清 pid",
+# 用 _UNSET 默认值才能区别于"不更新此字段"。
+_UNSET: Any = object()
+
 _CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS runner_instances (
     id TEXT PRIMARY KEY,
@@ -155,9 +159,10 @@ class RunnerRegistry:
         params_override: dict[str, Any] | None = None,
         mode: RunnerMode | None = None,
         status: RunnerStatus | None = None,
-        pid: int | None = None,
-        last_heartbeat: datetime | None = None,
+        pid: int | None | Any = _UNSET,
+        last_heartbeat: datetime | None | Any = _UNSET,
     ) -> RunnerInstance:
+        """更新指定字段。pid / last_heartbeat 用 _UNSET sentinel 默认,允许显式传 None 清空。"""
         existing = self.get(id=id)
         new = existing.model_copy(
             update={
@@ -166,9 +171,9 @@ class RunnerRegistry:
                 else existing.params_override,
                 "mode": mode if mode is not None else existing.mode,
                 "status": status if status is not None else existing.status,
-                "pid": pid if pid is not None else existing.pid,
+                "pid": pid if pid is not _UNSET else existing.pid,
                 "last_heartbeat": last_heartbeat
-                if last_heartbeat is not None
+                if last_heartbeat is not _UNSET
                 else existing.last_heartbeat,
                 "updated_at": datetime.now().astimezone(),
             }
