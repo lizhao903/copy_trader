@@ -165,9 +165,7 @@ class Settings(BaseModel):
         accounts_set = set(self.accounts.keys())
         for slice_ in self.capital_allocation:
             if slice_.account not in accounts_set:
-                raise ValueError(
-                    f"capital_allocation 引用了未定义的 account: {slice_.account}"
-                )
+                raise ValueError(f"capital_allocation 引用了未定义的 account: {slice_.account}")
         for p in self.pyramid:
             if p.account not in accounts_set:
                 raise ValueError(f"pyramid 引用了未定义的 account: {p.account}")
@@ -233,9 +231,7 @@ class Settings(BaseModel):
                 if candidate.is_file():
                     local_path = candidate
         if local_path is not None and local_path.is_file():
-            layered.append(
-                ("local", _load_yaml_with_secret_guard(local_path, layer="local"))
-            )
+            layered.append(("local", _load_yaml_with_secret_guard(local_path, layer="local")))
         else:
             layered.append(("local", {}))
 
