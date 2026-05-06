@@ -1,0 +1,183 @@
+[importlinter]
+root_package = copy_trader
+
+# 把 package-layout spec 里的「单向依赖图」编码成 import-linter contracts。
+# spec 原文（依赖箭头 a → b 表示 a 可以 import b）：
+#   cli         → runners
+#   runners     → execution, pnl, exchanges, marketdata, strategies, notify,
+#                 persistence, config
+#   execution   → pnl, exchanges, marketdata, persistence, core
+#   pnl         → persistence, core
+#   strategies  → core, marketdata
+#   exchanges   → core
+#   marketdata  → core
+#   persistence → core
+#   notify      → core
+#   config      → core
+#   core        → (stdlib only + pydantic-core)
+#
+# 这里使用 forbidden contracts 而不是单一 layers，因为依赖图不是严格全序：
+# strategies 与 pnl 互不依赖、execution 不依赖 strategies、pnl 不依赖
+# exchanges 等等，layers 的「上层可以依赖任意下层」会过宽，会放过 spec
+# 不允许的边。
+
+[importlinter:contract:core-leaf]
+name = core 是叶子层，不得 import 任何 copy_trader 子包
+type = forbidden
+source_modules =
+    copy_trader.core
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.marketdata
+    copy_trader.persistence
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:config-only-core]
+name = config 仅依赖 core
+type = forbidden
+source_modules =
+    copy_trader.config
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.marketdata
+    copy_trader.persistence
+    copy_trader.notify
+
+[importlinter:contract:notify-only-core]
+name = notify 仅依赖 core
+type = forbidden
+source_modules =
+    copy_trader.notify
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.marketdata
+    copy_trader.persistence
+    copy_trader.config
+
+[importlinter:contract:persistence-only-core]
+name = persistence 仅依赖 core
+type = forbidden
+source_modules =
+    copy_trader.persistence
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.marketdata
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:exchanges-only-core]
+name = exchanges 仅依赖 core
+type = forbidden
+source_modules =
+    copy_trader.exchanges
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.marketdata
+    copy_trader.persistence
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:marketdata-only-core]
+name = marketdata 仅依赖 core
+type = forbidden
+source_modules =
+    copy_trader.marketdata
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.persistence
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:strategies-allows-core-marketdata]
+name = strategies 仅依赖 core 与 marketdata
+type = forbidden
+source_modules =
+    copy_trader.strategies
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.persistence
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:pnl-allows-persistence-core]
+name = pnl 仅依赖 persistence 与 core
+type = forbidden
+source_modules =
+    copy_trader.pnl
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.exchanges
+    copy_trader.marketdata
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:execution-bounded]
+name = execution 仅依赖 pnl / exchanges / marketdata / persistence / core
+type = forbidden
+source_modules =
+    copy_trader.execution
+forbidden_modules =
+    copy_trader.cli
+    copy_trader.runners
+    copy_trader.strategies
+    copy_trader.notify
+    copy_trader.config
+
+[importlinter:contract:runners-bounded]
+name = runners 不得依赖 cli
+type = forbidden
+source_modules =
+    copy_trader.runners
+forbidden_modules =
+    copy_trader.cli
+
+[importlinter:contract:cli-only-runners-config]
+name = cli 仅可依赖 runners 与 config（顶层）
+type = forbidden
+source_modules =
+    copy_trader.cli
+forbidden_modules =
+    copy_trader.execution
+    copy_trader.strategies
+    copy_trader.pnl
+    copy_trader.exchanges
+    copy_trader.marketdata
+    copy_trader.persistence
+    copy_trader.notify
