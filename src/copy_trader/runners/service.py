@@ -59,9 +59,14 @@ class InvalidStateTransition(ValueError):
     """非法状态机转移 (例如 running → starting)。"""
 
     def __init__(self, from_status: str, to_status: str) -> None:
+        # `from_status` 实际上是 RunnerStatus,但接口上接 str 便于错误文本拼接;
+        # _TRANSITIONS.get 用 Any 转换跳过 mypy 严格 Literal 校验
+        from typing import cast as _cast
+
+        allowed = _TRANSITIONS.get(_cast(Any, from_status), set())
         super().__init__(
             f"invalid state transition: {from_status!r} → {to_status!r} "
-            f"(allowed from {from_status!r}: {_TRANSITIONS.get(from_status, set())})"
+            f"(allowed from {from_status!r}: {allowed})"
         )
         self.from_status = from_status
         self.to_status = to_status

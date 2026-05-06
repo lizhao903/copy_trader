@@ -45,8 +45,13 @@ from copy_trader.config.runtime import (
 )
 from copy_trader.runners import (
     AccountNotFoundError,
+    DuplicateRunnerNameError,
+    InvalidStateTransition,
     LiveRunResult,
     ReconcileRunResult,
+    RunnerNotFoundError,
+    RunnerRegistry,
+    RunnerService,
     UnknownStrategyError,
     build_ledger,
     default_exchange_factory,
@@ -414,10 +419,200 @@ def dashboard() -> None:
     _pending("dashboard", "M4")
 
 
-@app.command()
-def registry() -> None:
-    """[M2] ExchangeRegistry 列表 / 检查。"""
-    _pending("registry", "M2")
+# --------------------------------------------------------------------------- #
+# registry 子 app —— RunnerService CRUD + 启停 (issue #27)
+# --------------------------------------------------------------------------- #
+
+
+registry_app = typer.Typer(
+    name="registry",
+    help="Runner instance 持久化 CRUD + 启停 (issue #27 / RunnerService)。",
+    no_args_is_help=True,
+)
+app.add_typer(registry_app, name="registry")
+
+
+def _build_runner_service(home: str | None) -> tuple[RunnerService, RunnerRegistry]:
+    """构造 RunnerService + 它的 registry; 返回 tuple 让调用方负责关闭。"""
+    ctx = resolve_runtime(home=home)
+    db_dir = ctx.home / "db"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    registry = RunnerRegistry(db_dir / "runner_registry.db")
+    service = RunnerService(registry, pid_dir=ctx.home / "pids")
+    return service, registry
+
+
+@registry_app.command("create")
+def registry_create(
+    name: str = typer.Option(..., "--name"),  # noqa: B008
+    venue: str = typer.Option(..., "--venue"),  # noqa: B008
+    account: str = typer.Option(..., "--account"),  # noqa: B008
+    strategy: str = typer.Option(..., "--strategy"),  # noqa: B008
+    mode: str = typer.Option("dry-run", "--mode"),  # noqa: B008
+    params_json: str | None = typer.Option(  # noqa: B008
+        None,
+        "--params",
+        help="JSON 字符串 (如 '{\"slippage\": 5}')。",
+    ),
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """创建一个新 runner 实例 (status='stopped')。"""
+    import json as _json
+
+    if mode not in ("live", "paper", "dry-run", "backtest"):
+        typer.echo(f"错误: --mode 必须是 live/paper/dry-run/backtest, 收到 {mode!r}")
+        raise typer.Exit(code=1)
+
+    params: dict[str, Any] = {}
+    if params_json:
+        try:
+            params = _json.loads(params_json)
+        except _json.JSONDecodeError as exc:
+            typer.echo(f"错误: --params 不是合法 JSON: {exc}")
+            raise typer.Exit(code=1) from exc
+
+    service, registry = _build_runner_service(home)
+    try:
+        runner = service.create(
+            name=name,
+            venue=venue,
+            account=account,
+            strategy=strategy,
+            mode=mode,  # type: ignore[arg-type]
+            params_override=params,
+        )
+        typer.echo(f"created: id={runner.id} name={runner.name} status={runner.status}")
+    except DuplicateRunnerNameError as exc:
+        typer.echo(f"错误: {exc}")
+        raise typer.Exit(code=1) from exc
+    finally:
+        registry.close()
+
+
+@registry_app.command("update")
+def registry_update(
+    id_or_name: str = typer.Argument(..., help="runner id 或 name"),  # noqa: B008
+    params_json: str | None = typer.Option(None, "--params"),  # noqa: B008
+    mode: str | None = typer.Option(None, "--mode"),  # noqa: B008
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """更新 runner 字段 (params_override / mode)。"""
+    import json as _json
+
+    params: dict[str, Any] | None = None
+    if params_json:
+        try:
+            params = _json.loads(params_json)
+        except _json.JSONDecodeError as exc:
+            typer.echo(f"错误: {exc}")
+            raise typer.Exit(code=1) from exc
+
+    service, registry = _build_runner_service(home)
+    try:
+        runner = service.update(
+            id_or_name,
+            params_override=params,
+            mode=mode,  # type: ignore[arg-type]
+        )
+        typer.echo(f"updated: id={runner.id} name={runner.name}")
+    except RunnerNotFoundError as exc:
+        typer.echo(f"错误: {exc}")
+        raise typer.Exit(code=1) from exc
+    finally:
+        registry.close()
+
+
+@registry_app.command("delete")
+def registry_delete(
+    id_or_name: str = typer.Argument(...),  # noqa: B008
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """删除 runner; running 状态先发 stop 等 30s 后 SIGKILL。"""
+    service, registry = _build_runner_service(home)
+    try:
+        service.delete(id_or_name)
+        typer.echo(f"deleted: {id_or_name}")
+    except RunnerNotFoundError as exc:
+        typer.echo(f"错误: {exc}")
+        raise typer.Exit(code=1) from exc
+    finally:
+        registry.close()
+
+
+@registry_app.command("start")
+def registry_start(
+    id_or_name: str = typer.Argument(...),  # noqa: B008
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """stopped → starting (外部 supervisor 接续 starting → running)。"""
+    service, registry = _build_runner_service(home)
+    try:
+        runner = service.start(id_or_name)
+        typer.echo(f"started: id={runner.id} status={runner.status}")
+    except (RunnerNotFoundError, InvalidStateTransition) as exc:
+        typer.echo(f"错误: {exc}")
+        raise typer.Exit(code=1) from exc
+    finally:
+        registry.close()
+
+
+@registry_app.command("stop")
+def registry_stop(
+    id_or_name: str = typer.Argument(...),  # noqa: B008
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """running → stopping (发 SIGTERM 等主循环优雅退出)。"""
+    service, registry = _build_runner_service(home)
+    try:
+        runner = service.stop(id_or_name)
+        typer.echo(f"stopping: id={runner.id} status={runner.status}")
+    except (RunnerNotFoundError, InvalidStateTransition) as exc:
+        typer.echo(f"错误: {exc}")
+        raise typer.Exit(code=1) from exc
+    finally:
+        registry.close()
+
+
+@registry_app.command("list")
+def registry_list(
+    status: str | None = typer.Option(  # noqa: B008
+        None,
+        "--status",
+        help="按 status 过滤 (draft/stopped/starting/running/stopping/errored)",
+    ),
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """列出所有 runner 实例; --status 可过滤。"""
+    service, registry = _build_runner_service(home)
+    try:
+        runners = service.list_all(status=status)  # type: ignore[arg-type]
+        if not runners:
+            typer.echo("(no runners)")
+            return
+        for r in runners:
+            typer.echo(
+                f"  id={r.id[:8]}.. name={r.name} venue={r.venue} status={r.status} "
+                f"pid={r.pid} hb={r.last_heartbeat}"
+            )
+    finally:
+        registry.close()
+
+
+@registry_app.command("reap")
+def registry_reap(
+    home: str | None = typer.Option(None, "--home"),  # noqa: B008
+) -> None:
+    """扫描 running 行, last_heartbeat 超 60s 标 errored + SIGKILL PID。"""
+    service, registry = _build_runner_service(home)
+    try:
+        reaped = service.reap()
+        if not reaped:
+            typer.echo("(none reaped)")
+            return
+        for r in reaped:
+            typer.echo(f"  reaped: id={r.id[:8]}.. name={r.name} → errored")
+    finally:
+        registry.close()
 
 
 # --------------------------------------------------------------------------- #
