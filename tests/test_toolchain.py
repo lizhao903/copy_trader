@@ -35,9 +35,8 @@ def test_python_version_meets_requires_python() -> None:
 
 def test_no_replacement_tool_artifacts() -> None:
     offenders = [name for name in FORBIDDEN_LEGACY_FILES if (REPO_ROOT / name).exists()]
-    assert not offenders, (
-        "tooling-uv spec forbids replacement-tool artifacts; found: "
-        + ", ".join(offenders)
+    assert not offenders, "tooling-uv spec forbids replacement-tool artifacts; found: " + ", ".join(
+        offenders
     )
 
 
