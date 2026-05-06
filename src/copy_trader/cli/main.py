@@ -43,6 +43,13 @@ from copy_trader.config.runtime import (
     read_runtime_lock,
     resolve_runtime,
 )
+from copy_trader.runners import (
+    AccountNotFoundError,
+    ReconcileRunResult,
+    build_ledger,
+    default_exchange_factory,
+    run_reconcile,
+)
 
 app = typer.Typer(
     name="copy-trader",
@@ -96,9 +103,110 @@ def backtest() -> None:
 
 
 @app.command()
-def reconcile() -> None:
-    """[M2+] 跑 reconcile（与交易所对账）。"""
-    _pending("reconcile", "M2+")
+def reconcile(
+    account: str = typer.Option(  # noqa: B008
+        ...,
+        "--account",
+        "-a",
+        help="目标账户名（必须存在于 config.accounts）。",
+    ),
+    apply: bool = typer.Option(  # noqa: B008
+        True,
+        "--apply/--no-apply",
+        help="--apply（默认）允许 reconcile 自动覆盖 cache 文件；"
+        "--no-apply 是 dry-run，仅打印差异不改 cache。",
+    ),
+    acknowledge_unknown: bool = typer.Option(  # noqa: B008
+        False,
+        "--acknowledge-unknown",
+        help="人工确认交易所有 ledger 不知道的余额；"
+        "默认遇到 unknown_position_on_exchange 拒绝启动并退出 1。",
+    ),
+    home: str | None = typer.Option(  # noqa: B008
+        None,
+        "--home",
+        help="覆盖 COPY_TRADER_HOME，便于在隔离目录里跑 reconcile。",
+    ),
+    config_dir: Path | None = typer.Option(  # noqa: B008
+        None,
+        "--config-dir",
+        help="config/ 目录路径；缺省自动探测仓库根 config/。",
+    ),
+) -> None:
+    """启动期 reconcile：对账 ledger / cache / exchange 三方差异（issue #13）。
+
+    退出码：
+    - 0：全部对齐，或仅有 cache_drift / acknowledged unknown / SAFE-mode warning
+    - 1：``unknown_position_on_exchange`` 未确认（``report.fatal=True``）
+        或参数错误 / 配置错误
+    """
+    try:
+        ctx = resolve_runtime(home=home)
+    except MissingEnvError as exc:
+        typer.echo(f"错误：{exc}")
+        raise typer.Exit(code=1) from exc
+    except RuntimeBootstrapError as exc:
+        typer.echo(f"runtime bootstrap 失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    cfg_path = config_dir or _autodetect_config_dir()
+    if cfg_path is None or not cfg_path.is_dir():
+        typer.echo(f"错误：未找到 config/ 目录（looked at {cfg_path}）。")
+        raise typer.Exit(code=1)
+
+    try:
+        settings = Settings.load(
+            config_dir=cfg_path,
+            env=ctx.env_tag,
+            local_path=(ctx.home / "config.yaml") if (ctx.home / "config.yaml").is_file() else None,
+        )
+    except (ValidationError, OSError, ValueError) as exc:
+        typer.echo(f"settings 加载失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    if account not in settings.accounts:
+        sorted_avail = sorted(settings.accounts.keys())
+        typer.echo(f"错误：account {account!r} 不在配置里；可选账户：{sorted_avail}")
+        raise typer.Exit(code=1)
+
+    venue = settings.accounts[account].venue
+    try:
+        exchange = default_exchange_factory(venue)
+    except KeyError as exc:
+        # UnknownExchangeError / 未注册 venue：把 registry 列表透传给用户
+        typer.echo(f"错误：venue 未注册：{exc}")
+        raise typer.Exit(code=1) from exc
+    except Exception as exc:  # noqa: BLE001
+        typer.echo(f"错误：交易所适配器初始化失败：{exc}")
+        raise typer.Exit(code=1) from exc
+
+    # 通过 runners 工厂构造 ledger / exchange，避免 cli 层直接 import
+    # persistence / exchanges（违反 cli-only-runners-config 契约）。
+    ledger = build_ledger(home=ctx.home, env_tag=ctx.env_tag, machine_id=ctx.machine_id)
+
+    try:
+        result = run_reconcile(
+            account=account,
+            settings=settings,
+            ledger=ledger,
+            exchange=exchange,
+            cache_dir=ctx.home / "state",
+            logs_dir=ctx.home / "logs",
+            apply=apply,
+            acknowledge_unknown=acknowledge_unknown,
+        )
+    except AccountNotFoundError as exc:
+        typer.echo(f"错误：{exc}")
+        raise typer.Exit(code=1) from exc
+    finally:
+        # TradesRepo 持有 sqlite 连接，结束时关闭
+        _safe_close(ledger)
+
+    _print_reconcile_summary(result)
+    if result.report.fatal:
+        # spec：unknown_position_on_exchange 未 acknowledge → 退出 1
+        raise typer.Exit(code=1)
+    raise typer.Exit(code=0)
 
 
 @app.command()
@@ -370,6 +478,77 @@ def _flatten_for_provenance(node: Any, prefix: str = "") -> list[tuple[str, Any]
     else:
         out.append((prefix, node))
     return out
+
+
+_PROBLEM_EVENT_KINDS: frozenset[str] = frozenset(
+    {
+        "cache_overridden",
+        "ledger_exchange_mismatch",
+        "unknown_position_on_exchange",
+        "unknown_position_acknowledged",
+    }
+)
+
+
+def _print_reconcile_summary(result: ReconcileRunResult) -> None:
+    """打印 reconcile 结果摘要。
+
+    展示分支（按优先级）：
+
+    1. ``report.fatal`` → 打印 fatal_message，提示 ``--acknowledge-unknown``
+    2. ``report.safe_mode`` → 打印 SAFE / mismatch warning
+    3. ledger 完全为空 + 没有"问题事件"（cache_overridden / mismatch /
+       unknown 等） → "已对齐"（验收清单语义：空账户跑 reconcile 报告
+       已对齐并退出 0；cache_created 这种"刚刚自动建好 cache 文件"不计为
+       问题事件）
+    4. 其他（cache_drift / ack_unknown / 全 OK）→ "reconcile OK"
+    """
+    report = result.report
+    typer.echo("== copy-trader reconcile ==")
+    typer.echo(f"account     : {report.account}")
+    typer.echo(f"symbols     : {list(report.symbols)}")
+    typer.echo(f"apply       : {result.applied}")
+    if report.log_path is not None:
+        typer.echo(f"log_path    : {report.log_path}")
+
+    if report.events:
+        typer.echo("")
+        typer.echo("[events]")
+        for ev in report.events:
+            typer.echo(f"  [{ev.level:<7}] {ev.kind} {ev.symbol}: {ev.message}")
+
+    if report.fatal:
+        typer.echo("")
+        typer.echo("结果：FATAL — 检测到 unknown_position_on_exchange。")
+        msg = report.fatal_message or "unknown_position_on_exchange"
+        typer.echo(msg)
+        typer.echo("提示：经人工确认后可加 --acknowledge-unknown 重新启动。")
+        return
+
+    if report.safe_mode:
+        typer.echo("")
+        typer.echo("结果：SAFE 模式 — 检测到 ledger ↔ exchange mismatch（仅平仓不开仓）。")
+        return
+
+    has_problem_events = any(ev.kind in _PROBLEM_EVENT_KINDS for ev in report.events)
+
+    typer.echo("")
+    if result.empty_ledger and not has_problem_events:
+        typer.echo("已对齐：ledger 为空、与交易所一致；reconcile OK。")
+    elif not has_problem_events:
+        typer.echo("已对齐：ledger 与交易所一致；reconcile OK。")
+    else:
+        typer.echo("结果：reconcile OK（仅 cache_drift / ack 类事件，已自动处理）。")
+
+
+def _safe_close(obj: Any) -> None:
+    """尽力关闭含 ``close`` 方法的资源；忽略关闭异常。"""
+    close = getattr(obj, "close", None)
+    if callable(close):
+        try:
+            close()
+        except Exception:  # noqa: BLE001
+            pass
 
 
 __all__ = ["app"]

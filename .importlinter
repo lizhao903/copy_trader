@@ -169,7 +169,7 @@ forbidden_modules =
     copy_trader.cli
 
 [importlinter:contract:cli-only-runners-config]
-name = cli 仅可依赖 runners 与 config（顶层）
+name = cli 仅可依赖 runners 与 config（顶层 / 直接 import）
 type = forbidden
 source_modules =
     copy_trader.cli
@@ -181,3 +181,7 @@ forbidden_modules =
     copy_trader.marketdata
     copy_trader.persistence
     copy_trader.notify
+# cli 通过 runners 间接依赖这些子包是合法的（runners 是合法的"门面"）；
+# 本契约只阻止 cli 直接 import 它们。runners 通过本身的 forbidden contracts
+# （runners-bounded）防止反向依赖 cli。
+allow_indirect_imports = true
